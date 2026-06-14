@@ -5,4 +5,4 @@ cosmochess/
     ├── index.html
     ├── style.css
     ├── app.js
-    └── stockfish.js  (скачаем ниже)
+    └── stockfish.js
