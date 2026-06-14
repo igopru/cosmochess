@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Шахматный тренажёр</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>♟ Шахматный тренажёр</h1>
+        <div id="status">Ход белых</div>
+        <div class="board-wrapper" id="boardWrapper">
+            <div id="board"></div>
+        </div>
+        <div class="controls-row">
+            <button id="resetBtn">Новая игра</button>
+            <button id="flipBtn">Перевернуть</button>
+        </div>
+        <div class="controls-row">
+            <select id="difficulty">
+                <option value="5">Легкий</option>
+                <option value="10" selected>Средний</option>
+                <option value="15">Сложный</option>
+            </select>
+            <button id="copyBtn">Копировать ходы</button>
+        </div>
+        <div class="controls-row">
+            <button id="rotate90">Поворот 90°</button>
+            <button id="rotate180">Поворот 180°</button>
+            <button id="rotateReset">Сброс</button>
+        </div>
+        <div class="training-section">
+            <button id="trainingToggle" class="training-toggle">🎓 Обучение</button>
+            <div id="trainingPanel" class="training-panel hidden">
+                <div class="training-header">
+                    <span class="training-title">Режим обучения</span>
+                    <label class="hint-label"><input type="checkbox" id="hintCheck" checked> Подсказки</label>
+                </div>
+                <select id="trainingSelect"></select>
+                <div id="openingDesc" class="opening-desc"></div>
+                <div class="progress-bar">
+                    <div id="trainingProgress" class="progress-fill" style="width:0%"></div>
+                </div>
+                <div id="trainingProgressText" class="progress-text">Не начато</div>
+                <div id="trainingHint" class="training-hint hidden"></div>
+                <div class="training-actions">
+                    <button id="startTrainingBtn" class="training-start">Начать</button>
+                    <button id="stopTrainingBtn" class="training-stop" disabled>Выйти</button>
+                </div>
+            </div>
+        </div>
+        <div id="pgn" class="pgn-box"></div>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

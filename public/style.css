@@ -1,0 +1,249 @@
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 8px;
+    -webkit-tap-highlight-color: transparent;
+}
+.container {
+    text-align: center;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 440px;
+}
+h1 {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+}
+#status {
+    margin-bottom: 0.8rem;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #555;
+    min-height: 1.5em;
+}
+#board {
+    width: 400px;
+}
+.board-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+}
+.controls-row {
+    margin-top: 0.6rem;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+button:active {
+    transform: scale(0.96);
+}
+button:hover {
+    background-color: #45a049;
+}
+#flipBtn {
+    background-color: #2196F3;
+}
+#flipBtn:hover {
+    background-color: #0b7dda;
+}
+#copyBtn {
+    background-color: #FF9800;
+}
+#copyBtn:hover {
+    background-color: #e68900;
+}
+select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: white;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+.training-section {
+    margin-top: 1rem;
+    text-align: left;
+}
+.training-toggle {
+    background-color: #673AB7;
+    width: 100%;
+    padding: 10px;
+    font-size: 0.95rem;
+}
+.training-toggle:hover {
+    background-color: #5E35B1;
+}
+.training-toggle.active {
+    background-color: #FF5722;
+}
+.training-toggle.active:hover {
+    background-color: #E64A19;
+}
+.training-panel {
+    background: #f8f8ff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-top: 0.5rem;
+    transition: opacity 0.2s;
+}
+.training-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.training-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+.hint-label {
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.hint-label input {
+    cursor: pointer;
+}
+.training-panel select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    background: white;
+}
+.opening-desc {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    min-height: 1.2em;
+}
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.3rem;
+}
+.progress-fill {
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+.progress-text {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 0.4rem;
+}
+.training-hint {
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    color: #F57F17;
+    font-weight: bold;
+}
+.training-actions {
+    display: flex;
+    gap: 8px;
+}
+.training-start {
+    background-color: #4CAF50;
+    flex: 1;
+}
+.training-start:hover {
+    background-color: #388E3C;
+}
+.training-stop {
+    background-color: #f44336;
+    flex: 1;
+}
+.training-stop:hover {
+    background-color: #D32F2F;
+}
+.training-stop:disabled {
+    background-color: #ccc !important;
+    cursor: default;
+}
+.pgn-box {
+    margin-top: 0.8rem;
+    font-family: monospace;
+    background: #eee;
+    padding: 8px;
+    border-radius: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+    text-align: left;
+    font-size: 0.8rem;
+    word-break: break-all;
+}
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 100;
+}
+.toast.show {
+    opacity: 1;
+}
+
+@media (max-width: 460px) {
+    .container {
+        padding: 0.6rem;
+        border-radius: 8px;
+    }
+    h1 {
+        font-size: 1.1rem;
+    }
+    button {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+}
