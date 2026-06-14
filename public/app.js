@@ -9,7 +9,6 @@ let boardSize = 0;
 const PIECE_IMG = 'img/chesspieces/wikipedia/{piece}.png';
 
 const trainingItems = [
-    // ─── ДЕБЮТЫ ───
     { category: 'Дебюты', id: 'london', name: 'Лондонская система', desc: 'Надёжный дебют 1.d4 с выходом слона на f4.', fen: '', side: 'w',
         ucis: ['d2d4','d7d5','c1f4','g8f6','e2e3','e7e6','g1f3','c7c5','c2c3','b8c6','b1d2'],
         hints: ['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — поддержка центра','4. Nf3 — развитие коня','5. c3 — контроль d4','6. Nbd2 — заверши развитие'] },
@@ -32,7 +31,6 @@ const trainingItems = [
         ucis: ['d2d4','g8f6','c2c4','g7g6','b1c3','f8g7','e2e4','d7d6','g1f3','e8g8','f1e2','e7e5'],
         hints: ['1... Nf6 — староиндийская','2... g6 — подготовка Bg7','3... Bg7 — фианкетто','4... d6 — поддержка центра','5... O-O — рокировка','6... e5 — контратака'] },
 
-    // ─── ЗАДАЧИ ───
     { category: 'Задачи', id: 'scholar', name: 'Детский мат', desc: 'Найдите мат в 1 ход.', fen: 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 4', side: 'w',
         ucis: ['d1f7'], hints: ['Ферзь на f7 — мат!'] },
     { category: 'Задачи', id: 'legal', name: 'Мат Легаля', desc: 'Найдите мат в 1 ход.', fen: 'r2qkb1r/ppp2Bpp/3p4/8/4N3/2N5/PPPP1bPP/R1BQK2R w KQkq - 0 7', side: 'w',
@@ -58,22 +56,237 @@ const trainingItems = [
 const training = { active: false, item: null, moveIndex: 0, hintsOn: true };
 var trainingTimer = null;
 
+let currentEval = 0;
+let isAnalyzing = false;
+
+const review = { active: false, moves: [], currentIdx: -1, origPgn: '' };
+let isReviewQuery = false;
+
+let evalBeforeUserMove = 0;
+let lastUserSan = '';
+const moveLog = [];
+
+let userColor = 'w';
+let lastMoveFrom = '';
+let lastMoveTo = '';
+
+/* ─── STOCKFISH ─── */
+
 stockfish.onmessage = function(event) {
     if (event.data === 'uciok') { stockfish.postMessage('isready'); return; }
-    if (event.data === 'readyok') { engineReady = true; return; }
+    if (event.data === 'readyok') {
+        engineReady = true;
+        updateEvalBar();
+        setTimeout(function() { if (!training.active && !review.active) analyzePosition(); }, 300);
+        return;
+    }
+
+    const m = event.data.match(/info.*\bscore\s+(cp|mate)\s+(-?\d+)/);
+    if (m) {
+        if (m[1] === 'cp') {
+            currentEval = parseInt(m[2], 10) / 100.0;
+        } else if (m[1] === 'mate') {
+            const v = parseInt(m[2], 10);
+            currentEval = v > 0 ? 99.99 + v : -(99.99 + Math.abs(v));
+        }
+        updateEvalBar();
+    }
+
     if (event.data.startsWith('bestmove')) {
-        if (!engineBusy) return;
-        engineBusy = false;
         const bestMove = event.data.split(' ')[1];
-        if (!bestMove) return;
+
+        if (isReviewQuery) {
+            isReviewQuery = false;
+            engineBusy = false;
+            const info = document.getElementById('reviewInfo');
+            if (bestMove && bestMove !== '(none)') {
+                const clone = new Chess(game.fen());
+                const m2 = clone.move({ from: bestMove.substring(0,2), to: bestMove.substring(2,4), promotion: bestMove.substring(4,5)||'q' });
+                const bestSan = m2 ? m2.san : bestMove;
+                info.innerHTML = 'Лучший ход: <b>' + bestSan + '</b> | Оценка: <b>' + formatEval(currentEval) + '</b>';
+            } else {
+                info.innerHTML = 'Оценка: <b>' + formatEval(currentEval) + '</b>';
+            }
+            return;
+        }
+
+        if (isAnalyzing) {
+            isAnalyzing = false;
+            return;
+        }
+
+        if (!engineBusy) return;
+
+        if (!bestMove || bestMove === '(none)') { engineBusy = false; return; }
+
         const from = bestMove.substring(0, 2);
         const to = bestMove.substring(2, 4);
         const promotion = bestMove.substring(4, 5) || 'q';
         const move = game.move({ from, to, promotion });
-        if (move) { board.position(game.fen()); updateStatus(); }
+        if (move) {
+            engineBusy = false;
+            lastMoveFrom = from;
+            lastMoveTo = to;
+
+            if (!training.active && !review.active && lastUserSan) {
+                const swing = currentEval - evalBeforeUserMove;
+                let flag = '';
+                if (swing < -2.0) flag = '??';
+                else if (swing < -1.0) flag = '?';
+                else if (swing > 1.0) flag = '!';
+                if (flag) {
+                    moveLog.push({ san: lastUserSan, moveIdx: game.history().length - 1, flag: flag, evalBefore: evalBeforeUserMove, evalAfter: currentEval });
+                }
+                lastUserSan = '';
+            }
+
+            board.position(game.fen());
+            updateStatus();
+            if (!game.game_over() && !training.active && !review.active) {
+                setTimeout(function() { analyzePosition(); }, 200);
+            }
+            highlightLastMove();
+        }
     }
 };
 stockfish.postMessage('uci');
+
+/* ─── EVAL BAR & HIGHLIGHT ─── */
+
+function updateEvalBar() {
+    const whiteFill = document.getElementById('evalFillWhite');
+    const blackFill = document.getElementById('evalFillBlack');
+    const text = document.getElementById('evalText');
+    if (!whiteFill) return;
+    const pct = Math.max(0, Math.min(50, Math.abs(currentEval) * 8));
+    if (currentEval >= 0) {
+        whiteFill.style.height = pct + '%';
+        blackFill.style.height = '0%';
+    } else {
+        whiteFill.style.height = '0%';
+        blackFill.style.height = pct + '%';
+    }
+    text.textContent = formatEval(currentEval);
+}
+
+function formatEval(ev) {
+    if (Math.abs(ev) > 99) {
+        return (ev > 0 ? 'M' : '-M') + Math.abs(Math.round(ev - (ev > 0 ? 100 : -100)));
+    }
+    if (Math.abs(ev) < 0.01) return '0.00';
+    return (ev > 0 ? '+' : '') + ev.toFixed(2);
+}
+
+function analyzePosition() {
+    if (game.game_over()) return;
+    if (!engineReady) return;
+    if (engineBusy) return;
+    if (game.turn() !== userColor) return;
+    if (training.active) return;
+    if (review.active) return;
+    if (isAnalyzing) return;
+    isAnalyzing = true;
+    stockfish.postMessage('position fen ' + game.fen());
+    stockfish.postMessage('go depth 8');
+}
+
+function highlightLastMove() {
+    $('.highlight-last').removeClass('highlight-last');
+    if (!lastMoveFrom || !lastMoveTo) return;
+    function alg(sq) { return 'square-' + (9 - parseInt(sq[1], 10)) + (sq.charCodeAt(0) - 96); }
+    $('#board .' + alg(lastMoveFrom)).addClass('highlight-last');
+    $('#board .' + alg(lastMoveTo)).addClass('highlight-last');
+}
+
+/* ─── REVIEW MODE ─── */
+
+function enterReviewMode() {
+    if (training.active) { showToast('Сначала выйдите из обучения'); return; }
+    if (review.active) return;
+    const moves = game.history({ verbose: true });
+    if (!moves.length) { showToast('Нет ходов для разбора'); return; }
+    review.active = true;
+    review.moves = moves.slice();
+    review.currentIdx = moves.length - 1;
+    review.origPgn = game.pgn();
+    document.getElementById('reviewControls').classList.remove('hidden');
+    document.getElementById('reviewBtn').disabled = true;
+    document.getElementById('reviewBtn').innerText = 'Разбор...';
+    document.getElementById('board').style.pointerEvents = 'none';
+    updateReviewUI();
+    reviewQueryStockfish();
+}
+
+function exitReviewMode() {
+    if (!review.active) return;
+    review.active = false;
+    review.moves = [];
+    review.currentIdx = -1;
+    document.getElementById('reviewControls').classList.add('hidden');
+    document.getElementById('reviewBtn').disabled = false;
+    document.getElementById('reviewBtn').innerText = 'Разобрать партию';
+    document.getElementById('board').style.pointerEvents = '';
+    document.getElementById('reviewInfo').innerText = '';
+    if (review.origPgn) {
+        try { game.load_pgn(review.origPgn); } catch(e) { game.reset(); }
+    } else {
+        game.reset();
+    }
+    rebuildBoard(game.fen());
+    updateStatus();
+    if (!game.game_over()) setTimeout(function() { analyzePosition(); }, 300);
+}
+
+function reviewGoTo(idx) {
+    if (!review.active) return;
+    if (idx < -1 || idx >= review.moves.length) return;
+    review.currentIdx = idx;
+    game.reset();
+    for (var i = 0; i <= idx; i++) {
+        try { game.move(review.moves[i].san); } catch(e) { break; }
+    }
+    if (idx >= 0 && review.moves[idx]) {
+        lastMoveFrom = review.moves[idx].from;
+        lastMoveTo = review.moves[idx].to;
+    } else {
+        lastMoveFrom = lastMoveTo = '';
+    }
+    board.position(game.fen());
+    highlightLastMove();
+    updateReviewUI();
+    reviewQueryStockfish();
+}
+
+function reviewNext() {
+    if (!review.active) return;
+    reviewGoTo(review.currentIdx + 1);
+}
+
+function reviewPrev() {
+    if (!review.active) return;
+    reviewGoTo(review.currentIdx - 1);
+}
+
+function updateReviewUI() {
+    const total = review.moves.length;
+    const cur = review.currentIdx;
+    document.getElementById('reviewPos').innerText = (cur + 1) + '/' + total;
+    document.getElementById('reviewPrev').disabled = cur <= 0;
+    document.getElementById('reviewNext').disabled = cur >= total - 1;
+}
+
+function reviewQueryStockfish() {
+    if (game.game_over()) {
+        document.getElementById('reviewInfo').innerText = 'Игра завершена';
+        return;
+    }
+    isReviewQuery = true;
+    engineBusy = true;
+    stockfish.postMessage('position fen ' + game.fen());
+    stockfish.postMessage('go depth 12');
+}
+
+/* ─── BOARD ─── */
 
 function getBoardSize() {
     const ww = window.innerWidth - 32;
@@ -84,15 +297,17 @@ function getBoardSize() {
 function setBoardElementWidth() {
     boardSize = getBoardSize();
     document.getElementById('board').style.width = boardSize + 'px';
+    var evalBar = document.getElementById('evalBar');
+    if (evalBar) evalBar.style.height = boardSize + 'px';
 }
 
 function createBoard(position, orientation) {
     setBoardElementWidth();
-    const config = {
+    var config = {
         draggable: true,
         position: position || 'start',
         pieceTheme: PIECE_IMG,
-        orientation: orientation || 'white',
+        orientation: orientation || (userColor === 'b' ? 'black' : 'white'),
         onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd
     };
     board = Chessboard('board', config);
@@ -101,15 +316,17 @@ function createBoard(position, orientation) {
 function rebuildBoard(position, orientation) {
     if (board) board.destroy();
     setBoardElementWidth();
-    const config = {
+    var config = {
         draggable: true,
         position: position || game.fen(),
         pieceTheme: PIECE_IMG,
-        orientation: orientation || 'white',
+        orientation: orientation || (userColor === 'b' ? 'black' : 'white'),
         onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd
     };
     board = Chessboard('board', config);
 }
+
+/* ─── TRAINING ─── */
 
 function isPlayerMove(idx, side) {
     return (side === 'w' && idx % 2 === 0) || (side === 'b' && idx % 2 === 1);
@@ -132,10 +349,13 @@ function scheduleTrainingComputerMove() {
     trainingTimer = setTimeout(function() {
         trainingTimer = null;
         if (!training.active) return;
-        const uci = training.item.ucis[training.moveIndex];
-        const move = game.move({ from: uci.substring(0,2), to: uci.substring(2,4), promotion: uci.substring(4,5)||'q' });
+        var uci = training.item.ucis[training.moveIndex];
+        var move = game.move({ from: uci.substring(0,2), to: uci.substring(2,4), promotion: uci.substring(4,5)||'q' });
         if (move) {
+            lastMoveFrom = uci.substring(0,2);
+            lastMoveTo = uci.substring(2,4);
             board.position(game.fen());
+            highlightLastMove();
             training.moveIndex++;
             if (training.moveIndex >= training.item.ucis.length) { updateTrainingUI(); finishTraining(); }
             else if (isPlayerMove(training.moveIndex, training.item.side)) updateStatus();
@@ -145,9 +365,11 @@ function scheduleTrainingComputerMove() {
 }
 
 function startTraining(id) {
-    const item = trainingItems.find(function(o) { return o.id === id; });
+    var item = trainingItems.find(function(o) { return o.id === id; });
     if (!item) return;
+    if (review.active) exitReviewMode();
     clearTrainingTimer();
+    moveLog.length = 0;
     game.reset();
     training.active = true;
     training.item = item;
@@ -156,12 +378,12 @@ function startTraining(id) {
     document.getElementById('startTrainingBtn').disabled = true;
     document.getElementById('stopTrainingBtn').disabled = false;
     document.getElementById('trainingSelect').disabled = true;
-    document.getElementById('trainingToggle').textContent = '🎓 ' + item.category + ': ' + item.name;
+    document.getElementById('trainingToggle').textContent = '\u{1F393} ' + item.category + ': ' + item.name;
     document.getElementById('trainingToggle').classList.add('active');
     if (board) board.destroy();
     setBoardElementWidth();
-    const startPos = item.fen || 'start';
-    const config = {
+    var startPos = item.fen || 'start';
+    var config = {
         draggable: true, position: startPos, pieceTheme: PIECE_IMG,
         orientation: item.side === 'b' ? 'black' : 'white',
         onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd
@@ -180,7 +402,7 @@ function stopTraining() {
     document.getElementById('startTrainingBtn').disabled = false;
     document.getElementById('stopTrainingBtn').disabled = true;
     document.getElementById('trainingSelect').disabled = false;
-    document.getElementById('trainingToggle').textContent = '🎓 Обучение';
+    document.getElementById('trainingToggle').textContent = '\u{1F393} Обучение';
     document.getElementById('trainingToggle').classList.remove('active');
     document.getElementById('trainingHint').classList.add('hidden');
     document.getElementById('openingDesc').innerText = '';
@@ -190,7 +412,7 @@ function stopTraining() {
     if (board) {
         board.destroy();
         setBoardElementWidth();
-        board = Chessboard('board', { draggable: true, position: 'start', pieceTheme: PIECE_IMG, orientation: 'white', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd });
+        board = Chessboard('board', { draggable: true, position: 'start', pieceTheme: PIECE_IMG, orientation: userColor === 'b' ? 'black' : 'white', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd });
     }
     updateStatus();
 }
@@ -202,10 +424,10 @@ function finishTraining() {
     document.getElementById('startTrainingBtn').disabled = false;
     document.getElementById('stopTrainingBtn').disabled = true;
     document.getElementById('trainingSelect').disabled = false;
-    document.getElementById('trainingToggle').textContent = '🎓 Обучение';
+    document.getElementById('trainingToggle').textContent = '\u{1F393} Обучение';
     document.getElementById('trainingToggle').classList.remove('active');
     document.getElementById('trainingHint').classList.add('hidden');
-    showToast('🎉 Отлично! ' + training.item.name + ' — выполнено!');
+    showToast('\u{1F389} Отлично! ' + training.item.name + ' \u2014 выполнено!');
     document.getElementById('status').innerText = 'Обучение завершено! Выберите другой дебют или задачу.';
 }
 
@@ -215,18 +437,18 @@ function updateTrainingUI() {
         document.getElementById('trainingHint').classList.add('hidden');
         return;
     }
-    const o = training.item;
+    var o = training.item;
     document.getElementById('openingDesc').innerText = o.desc;
-    const total = o.ucis.length;
-    const cur = training.moveIndex;
-    const pct = Math.min(100, Math.round((cur / total) * 100));
+    var total = o.ucis.length;
+    var cur = training.moveIndex;
+    var pct = Math.min(100, Math.round((cur / total) * 100));
     document.getElementById('trainingProgress').style.width = pct + '%';
     document.getElementById('trainingProgressText').innerText = cur >= total ? 'Завершено!' : 'Ход ' + Math.floor(cur / 2 + 1) + ' из ' + Math.ceil(total / 2);
     if (isPlayerMove(cur, o.side) && training.hintsOn && cur < o.ucis.length) {
-        const hi = hintIdx(cur, o.side);
+        var hi = hintIdx(cur, o.side);
         if (o.hints[hi]) {
             document.getElementById('trainingHint').classList.remove('hidden');
-            document.getElementById('trainingHint').innerText = '▶ ' + o.hints[hi];
+            document.getElementById('trainingHint').innerText = '\u25B6 ' + o.hints[hi];
         }
     } else {
         document.getElementById('trainingHint').classList.add('hidden');
@@ -234,36 +456,43 @@ function updateTrainingUI() {
     updateStatus();
 }
 
+/* ─── DRAG & DROP ─── */
+
 function onDragStart(source, piece, position, orientation) {
+    if (review.active) return false;
     if (game.game_over()) return false;
     if (training.active) {
-        const pColor = piece[0];
-        const playerColor = training.item.side === 'w' ? 'w' : 'b';
+        var pColor = piece[0];
+        var playerColor = training.item.side === 'w' ? 'w' : 'b';
         if (pColor !== playerColor) return false;
         if (game.turn() !== playerColor) return false;
         if (!isPlayerMove(training.moveIndex, training.item.side)) return false;
         return true;
     }
-    if (game.turn() === 'b') return false;
-    if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-        (game.turn() === 'b' && piece.search(/^w/) !== -1)) return false;
+    if (piece[0] !== userColor) return false;
+    if (game.turn() !== userColor) return false;
 }
 
 function onDrop(source, target) {
+    if (review.active) return 'snapback';
     if (training.active && isPlayerMove(training.moveIndex, training.item.side)) {
-        const expected = training.item.ucis[training.moveIndex];
+        var expected = training.item.ucis[training.moveIndex];
         if (source + target !== expected) {
             if (training.hintsOn) {
-                const hi = hintIdx(training.moveIndex, training.item.side);
-                showToast('✗ ' + training.item.hints[hi]);
+                var hi = hintIdx(training.moveIndex, training.item.side);
+                showToast('\u2717 ' + training.item.hints[hi]);
             } else {
-                showToast('✗ Неверный ход, попробуй снова!');
+                showToast('\u2717 Неверный ход, попробуй снова!');
             }
             return 'snapback';
         }
     }
-    const move = game.move({ from: source, to: target, promotion: 'q' });
+    evalBeforeUserMove = currentEval;
+    var move = game.move({ from: source, to: target, promotion: 'q' });
     if (move === null) return 'snapback';
+    lastMoveFrom = source;
+    lastMoveTo = target;
+    lastUserSan = move.san;
     updateStatus();
     if (training.active) {
         training.moveIndex++;
@@ -275,64 +504,104 @@ function onDrop(source, target) {
     }
 }
 
-function onSnapEnd() { board.position(game.fen()); }
+function onSnapEnd() {
+    board.position(game.fen());
+    highlightLastMove();
+}
 
 function makeEngineMove() {
     if (game.game_over()) return;
-    if (game.turn() !== 'b') return;
+    if (game.turn() === userColor) return;
+    if (isAnalyzing) isAnalyzing = false;
     document.getElementById('status').innerText = 'Думает...';
     engineBusy = true;
     stockfish.postMessage('position fen ' + game.fen());
     stockfish.postMessage('go depth ' + parseInt(document.getElementById('difficulty').value, 10));
 }
 
+/* ─── UI ─── */
+
 function updateStatus() {
-    if (training.active && training.item) {
-        const o = training.item;
-        const cur = training.moveIndex;
-        const isPlayer = isPlayerMove(cur, o.side);
-        const s = 'Обучение: ' + o.name + ' | ' + (isPlayer ? 'Ваш ход' : 'Ход соперника...');
-        document.getElementById('status').innerText = s;
+    if (review.active) {
+        var mIdx = review.currentIdx + 1;
+        document.getElementById('status').innerText = 'Разбор: ход ' + mIdx + '/' + review.moves.length;
         return;
     }
-    let status = '';
-    const mc = game.turn() === 'w' ? 'Ход белых' : 'Ход черных';
+    if (training.active && training.item) {
+        var o = training.item;
+        var cur = training.moveIndex;
+        var isPlayer = isPlayerMove(cur, o.side);
+        document.getElementById('status').innerText = 'Обучение: ' + o.name + ' | ' + (isPlayer ? 'Ваш ход' : 'Ход соперника...');
+        updatePGNDisplay();
+        return;
+    }
+    var status = '';
     if (game.in_checkmate()) status = 'Игра окончена, ' + (game.turn() === 'w' ? 'черные' : 'белые') + ' победили матом.';
     else if (game.in_draw()) status = 'Игра окончена, ничья.';
-    else { status = mc; if (game.in_check()) status += ', Шах!'; }
+    else {
+        if (game.turn() === userColor) {
+            status = 'Ваш ход';
+            if (game.in_check()) status += ', Шах!';
+        } else {
+            status = 'Ход соперника...';
+        }
+    }
     document.getElementById('status').innerText = status;
-    document.getElementById('pgn').innerText = game.pgn();
+    updatePGNDisplay();
+}
+
+function updatePGNDisplay() {
+    var history = game.history({ verbose: true });
+    var html = '';
+    for (var i = 0; i < history.length; i++) {
+        var h = history[i];
+        var moveNum = Math.floor(i / 2) + 1;
+        if (i % 2 === 0) html += '<span class="pgn-move">' + moveNum + '. ';
+        html += h.san;
+        var flagged = null;
+        for (var j = 0; j < moveLog.length; j++) {
+            if (moveLog[j].moveIdx === i + 1) { flagged = moveLog[j]; break; }
+        }
+        if (flagged) {
+            var cls = flagged.flag === '??' ? 'flag-blunder' : flagged.flag === '?' ? 'flag-mistake' : 'flag-good';
+            html += '<span class="' + cls + '">' + flagged.flag + '</span>';
+        }
+        html += ' ';
+        if (i % 2 === 1) html += '</span>';
+    }
+    if (history.length % 2 === 1) html += '</span>';
+    document.getElementById('pgn').innerHTML = html || '';
 }
 
 function applyRotation(deg) {
     if (training.active) stopTraining();
     currentRotation = deg;
-    const boardEl = document.getElementById('board');
+    var boardEl = document.getElementById('board');
     boardEl.style.transform = deg ? 'rotate(' + deg + 'deg)' : '';
     boardEl.style.transformOrigin = 'center center';
     rebuildBoard();
 }
 
 function showToast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
 function populateTrainingSelect() {
-    const sel = document.getElementById('trainingSelect');
+    var sel = document.getElementById('trainingSelect');
     sel.innerHTML = '';
-    const groups = {};
+    var groups = {};
     trainingItems.forEach(function(item) {
         if (!groups[item.category]) groups[item.category] = [];
         groups[item.category].push(item);
     });
     Object.keys(groups).forEach(function(cat) {
-        const optgroup = document.createElement('optgroup');
+        var optgroup = document.createElement('optgroup');
         optgroup.label = cat;
         groups[cat].forEach(function(item) {
-            const opt = document.createElement('option');
+            var opt = document.createElement('option');
             opt.value = item.id;
             opt.textContent = item.name;
             optgroup.appendChild(opt);
@@ -341,11 +610,13 @@ function populateTrainingSelect() {
     });
 }
 
-let resizeTimer;
+/* ─── RESIZE ─── */
+
+var resizeTimer;
 window.addEventListener('resize', function() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function() {
-        const newSize = getBoardSize();
+        var newSize = getBoardSize();
         if (Math.abs(newSize - boardSize) > 5) {
             setBoardElementWidth();
             if (board && board.resize) board.resize();
@@ -354,23 +625,46 @@ window.addEventListener('resize', function() {
     }, 250);
 });
 
+/* ─── INIT ─── */
+
 populateTrainingSelect();
 createBoard('start', 'white');
 updateStatus();
 
+/* ─── EVENT LISTENERS ─── */
+
 document.getElementById('resetBtn').addEventListener('click', function() {
     if (training.active) stopTraining();
+    if (review.active) exitReviewMode();
+    moveLog.length = 0;
+    lastMoveFrom = lastMoveTo = '';
+    var sel = document.getElementById('colorSelect');
+    userColor = sel.value;
     game.reset();
-    rebuildBoard('start', 'white');
+    var orientation = userColor === 'b' ? 'black' : 'white';
+    rebuildBoard('start', orientation);
     updateStatus();
+    if (userColor === 'b' && !game.game_over()) {
+        setTimeout(function() { makeEngineMove(); }, 500);
+    }
 });
 
 document.getElementById('flipBtn').addEventListener('click', function() {
     if (board) board.flip();
 });
 
+document.getElementById('reviewBtn').addEventListener('click', function() {
+    if (training.active) { showToast('Сначала выйдите из обучения'); return; }
+    if (game.history().length === 0) { showToast('Нет ходов для разбора'); return; }
+    enterReviewMode();
+});
+
+document.getElementById('reviewPrev').addEventListener('click', reviewPrev);
+document.getElementById('reviewNext').addEventListener('click', reviewNext);
+document.getElementById('reviewExit').addEventListener('click', exitReviewMode);
+
 document.getElementById('copyBtn').addEventListener('click', function() {
-    const pgn = game.pgn();
+    var pgn = game.pgn();
     if (!pgn) { showToast('Нет ходов для копирования'); return; }
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(pgn).then(function() { showToast('Ходы скопированы!'); }).catch(function() { fallbackCopy(pgn); });
@@ -378,7 +672,7 @@ document.getElementById('copyBtn').addEventListener('click', function() {
 });
 
 function fallbackCopy(text) {
-    const ta = document.createElement('textarea');
+    var ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); showToast('Ходы скопированы!'); } catch (e) { showToast('Не удалось скопировать'); }
@@ -390,6 +684,10 @@ document.getElementById('rotate180').addEventListener('click', function() { appl
 document.getElementById('rotateReset').addEventListener('click', function() { applyRotation(0); });
 document.getElementById('difficulty').addEventListener('change', function() { showToast('Уровень сложности изменён'); });
 
+document.getElementById('colorSelect').addEventListener('change', function() {
+    showToast('Вы играете за ' + (this.value === 'w' ? 'белых' : 'чёрных'));
+});
+
 document.getElementById('trainingToggle').addEventListener('click', function() {
     document.getElementById('trainingPanel').classList.toggle('hidden');
 });
@@ -400,4 +698,25 @@ document.getElementById('stopTrainingBtn').addEventListener('click', function() 
 document.getElementById('hintCheck').addEventListener('change', function() {
     training.hintsOn = this.checked;
     if (training.active) updateTrainingUI();
+});
+
+document.getElementById('pgnToggle').addEventListener('click', function() {
+    document.getElementById('pgnPanel').classList.toggle('hidden');
+});
+document.getElementById('pgnLoadBtn').addEventListener('click', function() {
+    var pgn = document.getElementById('pgnText').value.trim();
+    if (!pgn) { showToast('Введите PGN'); return; }
+    if (training.active) stopTraining();
+    try {
+        game.load_pgn(pgn);
+    } catch(e) {
+        showToast('Ошибка: неверный формат PGN');
+        return;
+    }
+    if (board) board.destroy();
+    setBoardElementWidth();
+    board = Chessboard('board', { draggable: true, position: game.fen(), pieceTheme: PIECE_IMG, orientation: 'white', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd });
+    updateStatus();
+    document.getElementById('pgnPanel').classList.add('hidden');
+    enterReviewMode();
 });

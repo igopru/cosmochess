@@ -11,12 +11,30 @@
     <div class="container">
         <h1>♟ Шахматный тренажёр</h1>
         <div id="status">Ход белых</div>
-        <div class="board-wrapper" id="boardWrapper">
+        <div class="board-row">
+            <div id="evalBar" class="eval-bar">
+                <div id="evalFillWhite" class="eval-fill-white"></div>
+                <div id="evalFillBlack" class="eval-fill-black"></div>
+                <div class="eval-center"></div>
+                <span id="evalText" class="eval-text">0.00</span>
+            </div>
             <div id="board"></div>
         </div>
         <div class="controls-row">
+            <select id="colorSelect">
+                <option value="w">♔ Белые</option>
+                <option value="b">♚ Чёрные</option>
+            </select>
             <button id="resetBtn">Новая игра</button>
             <button id="flipBtn">Перевернуть</button>
+            <button id="reviewBtn">Разобрать партию</button>
+        </div>
+        <div id="reviewControls" class="review-controls hidden">
+            <button id="reviewPrev">&#x23EE;</button>
+            <span id="reviewPos">Ход 0/0</span>
+            <button id="reviewNext">&#x23ED;</button>
+            <button id="reviewExit" class="btn-danger">Выйти</button>
+            <div id="reviewInfo" class="review-info"></div>
         </div>
         <div class="controls-row">
             <select id="difficulty">
@@ -27,12 +45,12 @@
             <button id="copyBtn">Копировать ходы</button>
         </div>
         <div class="controls-row">
-            <button id="rotate90">Поворот 90°</button>
-            <button id="rotate180">Поворот 180°</button>
+            <button id="rotate90">Поворот 90&deg;</button>
+            <button id="rotate180">Поворот 180&deg;</button>
             <button id="rotateReset">Сброс</button>
         </div>
         <div class="training-section">
-            <button id="trainingToggle" class="training-toggle">🎓 Обучение</button>
+            <button id="trainingToggle" class="training-toggle">&#x1F393; Обучение</button>
             <div id="trainingPanel" class="training-panel hidden">
                 <div class="training-header">
                     <span class="training-title">Режим обучения</span>
@@ -49,6 +67,13 @@
                     <button id="startTrainingBtn" class="training-start">Начать</button>
                     <button id="stopTrainingBtn" class="training-stop" disabled>Выйти</button>
                 </div>
+            </div>
+        </div>
+        <div class="pgn-section">
+            <button id="pgnToggle" class="training-toggle">&#x1F4C4; Загрузить PGN</button>
+            <div id="pgnPanel" class="training-panel hidden">
+                <textarea id="pgnText" class="pgn-input" placeholder="Вставьте PGN партии..."></textarea>
+                <button id="pgnLoadBtn" class="training-start">Загрузить</button>
             </div>
         </div>
         <div id="pgn" class="pgn-box"></div>
