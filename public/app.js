@@ -76,6 +76,9 @@ stockfish.onmessage = function(event) {
     if (event.data === 'uciok') { stockfish.postMessage('isready'); return; }
     if (event.data === 'readyok') {
         engineReady = true;
+        var initElo = parseInt(document.getElementById('difficulty').value, 10);
+        stockfish.postMessage('setoption name UCI_LimitStrength value true');
+        stockfish.postMessage('setoption name UCI_Elo value ' + initElo);
         updateEvalBar();
         setTimeout(function() { if (!training.active && !review.active) analyzePosition(); }, 300);
         return;
@@ -186,6 +189,7 @@ function analyzePosition() {
     if (review.active) return;
     if (isAnalyzing) return;
     isAnalyzing = true;
+    stockfish.postMessage('setoption name UCI_LimitStrength value false');
     stockfish.postMessage('position fen ' + game.fen());
     stockfish.postMessage('go depth 8');
 }
@@ -282,6 +286,7 @@ function reviewQueryStockfish() {
     }
     isReviewQuery = true;
     engineBusy = true;
+    stockfish.postMessage('setoption name UCI_LimitStrength value false');
     stockfish.postMessage('position fen ' + game.fen());
     stockfish.postMessage('go depth 12');
 }
@@ -515,8 +520,11 @@ function makeEngineMove() {
     if (isAnalyzing) isAnalyzing = false;
     document.getElementById('status').innerText = 'Думает...';
     engineBusy = true;
+    var elo = parseInt(document.getElementById('difficulty').value, 10);
+    stockfish.postMessage('setoption name UCI_LimitStrength value true');
+    stockfish.postMessage('setoption name UCI_Elo value ' + elo);
     stockfish.postMessage('position fen ' + game.fen());
-    stockfish.postMessage('go depth ' + parseInt(document.getElementById('difficulty').value, 10));
+    stockfish.postMessage('go depth 15');
 }
 
 /* ─── UI ─── */
@@ -682,7 +690,12 @@ function fallbackCopy(text) {
 document.getElementById('rotate90').addEventListener('click', function() { applyRotation(currentRotation === 90 ? 0 : 90); });
 document.getElementById('rotate180').addEventListener('click', function() { applyRotation(currentRotation === 180 ? 0 : 180); });
 document.getElementById('rotateReset').addEventListener('click', function() { applyRotation(0); });
-document.getElementById('difficulty').addEventListener('change', function() { showToast('Уровень сложности изменён'); });
+document.getElementById('difficulty').addEventListener('change', function() {
+    if (engineReady) {
+        stockfish.postMessage('setoption name UCI_Elo value ' + parseInt(this.value, 10));
+    }
+    showToast('Уровень сложности изменён');
+});
 
 document.getElementById('colorSelect').addEventListener('change', function() {
     showToast('Вы играете за ' + (this.value === 'w' ? 'белых' : 'чёрных'));
