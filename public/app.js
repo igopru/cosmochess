@@ -488,7 +488,7 @@ function startTraining(id) {
     document.getElementById('startTrainingBtn').disabled = true;
     document.getElementById('stopTrainingBtn').disabled = false;
     document.getElementById('trainingSelect').disabled = true;
-    document.getElementById('trainingToggle').textContent = '\u{1F393} ' + item.category + ': ' + item.name;
+    document.getElementById('trainingToggle').textContent = '\u{1F393} ' + (groupNames[item.group] || item.group) + ': ' + item.name;
     document.getElementById('trainingToggle').classList.add('active');
     if (board) board.destroy();
     setBoardElementWidth();
@@ -520,6 +520,8 @@ function stopTraining() {
     document.getElementById('trainingToggle').textContent = '\u{1F393} Обучение';
     document.getElementById('trainingToggle').classList.remove('active');
     document.getElementById('trainingHint').classList.add('hidden');
+    document.getElementById('evalAnnotation').classList.add('hidden');
+    document.getElementById('moveEval').classList.add('hidden');
     document.getElementById('openingDesc').innerText = '';
     document.getElementById('trainingProgress').style.width = '0%';
     document.getElementById('trainingProgressText').innerText = 'Не начато';
@@ -558,6 +560,8 @@ function finishTraining() {
     document.getElementById('trainingToggle').textContent = '\u{1F393} Обучение';
     document.getElementById('trainingToggle').classList.remove('active');
     document.getElementById('trainingHint').classList.add('hidden');
+    document.getElementById('evalAnnotation').classList.add('hidden');
+    document.getElementById('moveEval').classList.add('hidden');
     if (isPuzzleMode) {
         isPuzzleMode = false;
         document.getElementById('getPuzzleBtn').disabled = false;
