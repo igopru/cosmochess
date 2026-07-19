@@ -42,6 +42,7 @@ h1 {
 #board {
     width: 400px;
     touch-action: none;
+    position: relative;
 }
 #board * {
     touch-action: none;

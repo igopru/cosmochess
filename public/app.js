@@ -428,6 +428,90 @@ function rebuildBoard(position, orientation) {
         orientation: orientation || (userColor === 'b' ? 'black' : 'white')
     };
     board = Chessboard('board', config);
+    ensureBoardSvg();
+}
+
+/* ─── ARROW OVERLAY ─── */
+
+function ensureBoardSvg() {
+    var svg = document.getElementById('boardArrows');
+    if (svg) return svg;
+    var boardEl = document.getElementById('board');
+    if (!boardEl) return null;
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('id', 'boardArrows');
+    svg.setAttribute('style', 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;');
+    boardEl.appendChild(svg);
+    return svg;
+}
+
+function squareCenter(sq) {
+    var boardEl = document.getElementById('board');
+    if (!boardEl) return null;
+    var sqEl = boardEl.querySelector('.square-' + sq);
+    if (!sqEl) return null;
+    var boardRect = boardEl.getBoundingClientRect();
+    var sqRect = sqEl.getBoundingClientRect();
+    return {
+        x: sqRect.left - boardRect.left + sqRect.width / 2,
+        y: sqRect.top - boardRect.top + sqRect.height / 2
+    };
+}
+
+function drawTrainingArrow(from, to) {
+    clearTrainingArrows();
+    if (isPuzzleMode) return;
+    var svg = ensureBoardSvg();
+    if (!svg) return;
+    var fromP = squareCenter(from);
+    var toP = squareCenter(to);
+    if (!fromP || !toP) return;
+
+    var dx = toP.x - fromP.x;
+    var dy = toP.y - fromP.y;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1) return;
+    var nx = dx / len;
+    var ny = dy / len;
+    var headLen = Math.min(14, len * 0.35);
+    var headW = 5;
+
+    // Arrow line (stop short of destination)
+    var lineEndX = toP.x - headLen * 0.4 * nx;
+    var lineEndY = toP.y - headLen * 0.4 * ny;
+
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M' + fromP.x + ',' + fromP.y + ' L' + lineEndX + ',' + lineEndY);
+    path.setAttribute('stroke', '#FFD700');
+    path.setAttribute('stroke-width', '3.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('class', 'training-arrow');
+    svg.appendChild(path);
+
+    // Arrowhead
+    var bx = toP.x - headLen * nx;
+    var by = toP.y - headLen * ny;
+    var px = -ny * headW;
+    var py = nx * headW;
+
+    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points',
+        toP.x + ',' + toP.y + ' ' +
+        (bx + px) + ',' + (by + py) + ' ' +
+        (bx - px) + ',' + (by - py));
+    poly.setAttribute('fill', '#FFD700');
+    poly.setAttribute('stroke', '#FFD700');
+    poly.setAttribute('stroke-width', '1');
+    poly.setAttribute('class', 'training-arrow');
+    svg.appendChild(poly);
+}
+
+function clearTrainingArrows() {
+    var svg = document.getElementById('boardArrows');
+    if (!svg) return;
+    var arr = svg.querySelectorAll('.training-arrow');
+    for (var i = arr.length - 1; i >= 0; i--) arr[i].remove();
 }
 
 /* ─── TRAINING ─── */
@@ -468,7 +552,7 @@ function scheduleTrainingComputerMove() {
             restoreTrainingHighlight();
             training.moveIndex++;
             if (training.moveIndex >= training.item.ucis.length) { updateTrainingUI(); finishTraining(); }
-            else if (isPlayerMove(training.moveIndex, training.item.side)) updateStatus();
+            else if (isPlayerMove(training.moveIndex, training.item.side)) { updateTrainingUI(); }
             else scheduleTrainingComputerMove();
         }
     }, 600);
@@ -498,6 +582,7 @@ function startTraining(id) {
         orientation: item.side === 'b' ? 'black' : 'white'
     };
     board = Chessboard('board', config);
+    ensureBoardSvg();
     if (item.fen) game.load(item.fen);
     updateTrainingUI();
     if (!isPlayerMove(0, item.side)) scheduleTrainingComputerMove();
@@ -505,6 +590,7 @@ function startTraining(id) {
 
 function stopTraining() {
     clearTrainingTimer();
+    clearTrainingArrows();
     var wasPuzzle = isPuzzleMode;
     training.active = false;
     training.item = null;
@@ -546,6 +632,7 @@ function stopTraining() {
 
 function finishTraining() {
     clearTrainingTimer();
+    clearTrainingArrows();
     if (!training.active) return;
     markCompleted(training.item.id);
     training.active = false;
@@ -632,8 +719,12 @@ function updateTrainingUI() {
             document.getElementById('trainingHint').classList.remove('hidden');
             document.getElementById('trainingHint').innerHTML = '\u25B6 ' + o.hints[hi];
         }
+        // Draw arrow on board
+        var uci = o.ucis[cur];
+        drawTrainingArrow(uci.substring(0, 2), uci.substring(2, 4));
     } else {
         document.getElementById('trainingHint').classList.add('hidden');
+        clearTrainingArrows();
     }
     updateStatus();
 }

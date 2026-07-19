@@ -1,0 +1,24 @@
+{
+  "name": "Шахматный тренажёр",
+  "short_name": "Шахматы",
+  "description": "Тренировка и анализ шахматных партий с движком Stockfish",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070714",
+  "theme_color": "#070714",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/img/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

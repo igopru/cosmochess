@@ -4,3 +4,4 @@ node_modules/
 lichess_db_puzzle.csv
 lichess_db_puzzle.csv.zst
 puzzles.json
+readme
