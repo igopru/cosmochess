@@ -74,7 +74,41 @@ app.get('/api/puzzle-meta', (req, res) => {
     res.json(puzzlesMeta);
 });
 
+let openingsCache = null;
+
+function loadOpenings() {
+    const p = path.join(__dirname, 'openings.json');
+    if (!fs.existsSync(p)) return;
+    const data = fs.readFileSync(p, 'utf8');
+    openingsCache = JSON.parse(data);
+    console.log(`Загружено ${openingsCache.length} дебютных вариаций из ${new Set(openingsCache.map(o => o.openingName)).size} дебютов`);
+}
+
+app.get('/api/openings', (req, res) => {
+    if (!openingsCache) return res.json({ error: 'Not loaded' });
+    const group = req.query.group || '';
+    if (group) {
+        res.json(openingsCache.filter(o => o.group === group));
+    } else {
+        res.json(openingsCache);
+    }
+});
+
+app.get('/api/openings/groups', (req, res) => {
+    if (!openingsCache) return res.json({ error: 'Not loaded' });
+    const seen = {};
+    const groups = [];
+    for (const o of openingsCache) {
+        if (!seen[o.group]) {
+            seen[o.group] = true;
+            groups.push({ group: o.group, name: o.openingName, count: openingsCache.filter(x => x.group === o.group).length });
+        }
+    }
+    res.json(groups);
+});
+
 loadPuzzles();
+loadOpenings();
 
 app.listen(PORT, () => {
     console.log(`♟ Шахматный тренажёр запущен: http://localhost:${PORT}`);

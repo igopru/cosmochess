@@ -51,164 +51,29 @@ let boardSize = 0;
 
 const PIECE_IMG = 'img/chesspieces/wikipedia/{piece}.png';
 
-var groupOrder = ['london','italian','queensgambit','sicilian','carokann','french','kingsindian'];
+var groupNames = {};
+var groupCategories = {};
+var trainingItems = [];
+var groupOrder = [];
 
-var groupNames = {
-    london: 'Лондонская система',
-    italian: 'Итальянская партия',
-    queensgambit: 'Ферзевый гамбит',
-    sicilian: 'Сицилианская защита',
-    carokann: 'Защита Каро-Канн',
-    french: 'Французская защита',
-    kingsindian: 'Староиндийская защита',
-    puzzles: 'Задачи'
-};
-
-var groupCategories = {
-    london: 'Дебюты', italian: 'Дебюты', queensgambit: 'Дебюты',
-    sicilian: 'Дебюты', carokann: 'Дебюты', french: 'Дебюты', kingsindian: 'Дебюты',
-    puzzles: 'Задачи'
-};
-
-var trainingItems = [
-    /* ════════════════════════════════════════
-       ЛОНДОНСКАЯ СИСТЕМА — 15 вариантов
-       ════════════════════════════════════════ */
-    { group:'london', id:'london-01', name:'Основной классический',
-        desc:'1.d4 d5 2.Bf4 Nf6 3.e3 e6 4.Nf3 c5 5.c3 Nc6 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','g8f6','e2e3','e7e6','g1f3','c7c5','c2c3','b8c6','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — поддержка центра','4. Nf3 — развитие коня','5. c3 — контроль d4','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-02', name:'Вариант с ...Bf5',
-        desc:'1.d4 d5 2.Bf4 Bf5 3.e3 e6 4.Nf3 Bd6 5.Bxd6 Qxd6 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','c8f5','e2e3','e7e6','g1f3','f8d6','f4d6','d8d6','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — подготовка Nf3','4. Nf3 — развитие коня','5. Bxd6 — размен слонов','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-03', name:'Вариант с ...c6 (Каро-Канн)',
-        desc:'1.d4 d5 2.Bf4 Nf6 3.e3 c6 4.Nf3 e6 5.c3 Nbd7 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','g8f6','e2e3','c7c6','g1f3','e7e6','c2c3','b8d7','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — поддержка','4. Nf3 — развитие коня','5. c3 — укрепление центра','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-04', name:'Вариант с ...Nc6 (Чигорина)',
-        desc:'1.d4 d5 2.Bf4 Nc6 3.e3 Nf6 4.Nf3 Bg4 5.c3 e6 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','b8c6','e2e3','g8f6','g1f3','c8g4','c2c3','e7e6','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — поддержка','4. Nf3 — развитие коня','5. c3 — контроль d4','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-05', name:'Староиндийский вариант',
-        desc:'1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 d6 5.c3 0-0 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','g8f6','c1f4','g7g6','e2e3','f8g7','g1f3','d7d6','c2c3','e8g8','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — подготовка','4. Nf3 — развитие коня','5. c3 — контроль','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-06', name:'Грюнфельд',
-        desc:'1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 0-0 5.Be2 d5 6.0-0',
-        fen:'', side:'w',
-        ucis:['d2d4','g8f6','c1f4','g7g6','e2e3','f8g7','g1f3','e8g8','f1e2','d7d5','e1g1'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — подготовка','4. Nf3 — развитие коня','5. Be2 — подготовка рокировки','6. O-O — рокировка'] },
-    { group:'london', id:'london-07', name:'Бенони',
-        desc:'1.d4 Nf6 2.Bf4 c5 3.e3 cxd4 4.exd4 d5 5.c3 e6 6.Nf3',
-        fen:'', side:'w',
-        ucis:['d2d4','g8f6','c1f4','c7c5','e2e3','c5d4','e3d4','d7d5','c2c3','e7e6','g1f3'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — подготовка','4. exd4 — восстановление центра','5. c3 — контроль d4','6. Nf3 — развитие коня'] },
-    { group:'london', id:'london-08', name:'Голландский вариант',
-        desc:'1.d4 f5 2.Bf4 Nf6 3.e3 e6 4.Nf3 d5 5.c3 c6 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','f7f5','c1f4','g8f6','e2e3','e7e6','g1f3','d7d5','c2c3','c7c6','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — поддержка','4. Nf3 — развитие коня','5. c3 — укрепление','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-09', name:'Модерн',
-        desc:'1.d4 g6 2.Bf4 Bg7 3.e3 d6 4.Nf3 Nf6 5.c3 0-0 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','g7g6','c1f4','f8g7','e2e3','d7d6','g1f3','g8f6','c2c3','e8g8','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — подготовка','4. Nf3 — развитие коня','5. c3 — контроль','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-10', name:'Английский вариант',
-        desc:'1.d4 c5 2.Bf4 cxd4 3.Qxd4 Nc6 4.Qd2 Nf6 5.e3 e6 6.Nc3',
-        fen:'', side:'w',
-        ucis:['d2d4','c7c5','c1f4','c5d4','d1d4','b8c6','d4d2','g8f6','e2e3','e7e6','b1c3'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. Qxd4 — взятие','4. Qd2 — отход ферзя','5. e3 — подготовка','6. Nc3 — развитие коня'] },
-    { group:'london', id:'london-11', name:'Джобава (Jobava London)',
-        desc:'1.d4 d5 2.Nc3 Nf6 3.Bf4 e6 4.e3 c5 5.Nf3 Nc6 6.dxc5',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','b1c3','g8f6','c1f4','e7e6','e2e3','c7c5','g1f3','b8c6','d4c5'],
-        hints:['1. d4 — захвати центр','2. Nc3 — развитие коня','3. Bf4 — слон на f4','4. e3 — поддержка','5. Nf3 — развитие','6. dxc5 — взятие'] },
-    { group:'london', id:'london-12', name:'Вариант с ...Qb6',
-        desc:'1.d4 d5 2.Bf4 Nf6 3.e3 Qb6 4.Nc3 c5 5.Na4 Qa5+ 6.c3',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','g8f6','e2e3','d8b6','b1c3','c7c5','c3a4','b6a5','c2c3'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — подготовка','4. Nc3 — развитие','5. Na4 — атака ферзя','6. c3 — блокировка шаха'] },
-    { group:'london', id:'london-13', name:'Вариант с ...Nbd7',
-        desc:'1.d4 d5 2.Bf4 Nf6 3.e3 Nbd7 4.Nf3 c5 5.c3 e6 6.Nbd2',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','g8f6','e2e3','b8d7','g1f3','c7c5','c2c3','e7e6','b1d2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. e3 — поддержка','4. Nf3 — развитие коня','5. c3 — контроль d4','6. Nbd2 — заверши развитие'] },
-    { group:'london', id:'london-14', name:'Атака Барри (Barry Attack)',
-        desc:'1.d4 Nf6 2.Bf4 g6 3.Nc3 d5 4.e3 Bg7 5.Nf3 0-0 6.Be2',
-        fen:'', side:'w',
-        ucis:['d2d4','g8f6','c1f4','g7g6','b1c3','d7d5','e2e3','f8g7','g1f3','e8g8','f1e2'],
-        hints:['1. d4 — захвати центр','2. Bf4 — развитие слона','3. Nc3 — развитие коня','4. e3 — подготовка','5. Nf3 — развитие','6. Be2 — подготовка рокировки'] },
-    { group:'london', id:'london-15', name:'Белградский гамбит',
-        desc:'1.d4 d5 2.Bf4 c5 3.e4 dxe4 4.d5 Nf6 5.Nc3 e3 6.Bxe3',
-        fen:'', side:'w',
-        ucis:['d2d4','d7d5','c1f4','c7c5','e2e4','d5e4','d4d5','g8f6','b1c3','e4e3','f4e3'],
-        hints:['1. d4 — захвати центр','2. Bf4 — слон на f4','3. e4 — гамбит!','4. d5 — оттеснение','5. Nc3 — развитие с темпом','6. Bxe3 — взятие пешки'] },
-
-    /* ════════════════════════════════════════
-       ИТАЛЬЯНСКАЯ ПАРТИЯ
-       ════════════════════════════════════════ */
-    { group:'italian', id:'italian', name:'Итальянская партия',
-        desc:'Классическое начало 1.e4 с выходом слона на c4.', fen:'', side:'w',
-        ucis:['e2e4','e7e5','g1f3','b8c6','f1c4','f8c5','c2c3','g8f6','d2d3','d7d6','e1g1'],
-        hints:['1. e4 — захвати центр','2. Nf3 — развитие коня','3. Bc4 — слон на c4','4. c3 — контроль d4','5. d3 — поддержка центра','6. O-O — рокировка'] },
-
-    /* ════════════════════════════════════════
-       ФЕРЗЕВЫЙ ГАМБИТ
-       ════════════════════════════════════════ */
-    { group:'queensgambit', id:'queensgambit', name:'Ферзевый гамбит',
-        desc:'Классический дебют: 1.d4 d5 2.c4.', fen:'', side:'w',
-        ucis:['d2d4','d7d5','c2c4','e7e6','b1c3','g8f6','c1g5','f8e7','e2e3','e8g8','g1f3'],
-        hints:['1. d4 — захвати центр','2. c4 — ферзевый гамбит','3. Nc3 — развитие коня','4. Bg5 — связка коня','5. e3 — поддержка центра','6. Nf3 — развитие коня'] },
-
-    /* ════════════════════════════════════════
-       СИЦИЛИАНСКАЯ ЗАЩИТА
-       ════════════════════════════════════════ */
-    { group:'sicilian', id:'sicilian', name:'Сицилианская защита',
-        desc:'Вы играете чёрными. 1.e4 c5.', fen:'', side:'b',
-        ucis:['e2e4','c7c5','g1f3','d7d6','d2d4','c5d4','f3d4','g8f6','b1c3','g7g6','c1e3','f8g7'],
-        hints:['1... c5 — сицилианская','2... d6 — подготовка e5','3... cxd4 — размен','4... Nf6 — развитие коня','5... g6 — подготовка Bg7','6... Bg7 — фианкетто'] },
-
-    /* ════════════════════════════════════════
-       ЗАЩИТА КАРО-КАНН
-       ════════════════════════════════════════ */
-    { group:'carokann', id:'carokann', name:'Защита Каро-Канн',
-        desc:'Вы играете чёрными. Надёжная защита на 1.e4.', fen:'', side:'b',
-        ucis:['e2e4','c7c6','d2d4','d7d5','e4e5','c8f5','g1f3','e7e6','f1e2','c6c5','e1g1','b8c6'],
-        hints:['1... c6 — Каро-Канн','2... d5 — атака центра','3... Bf5 — развитие слона','4... e6 — поддержка','5... c5 — контратака','6... Nc6 — развитие'] },
-
-    /* ════════════════════════════════════════
-       ФРАНЦУЗСКАЯ ЗАЩИТА
-       ════════════════════════════════════════ */
-    { group:'french', id:'french', name:'Французская защита',
-        desc:'Вы играете чёрными. 1.e4 e6.', fen:'', side:'b',
-        ucis:['e2e4','e7e6','d2d4','d7d5','e4e5','c7c5','c2c3','b8c6','g1f3','d8b6','a2a3','c5c4'],
-        hints:['1... e6 — французская','2... d5 — атака центра','3... c5 — контратака','4... Nc6 — развитие','5... Qb6 — давление на b2','6... c4 — закрытие позиции'] },
-
-    /* ════════════════════════════════════════
-       СТАРОИНДИЙСКАЯ ЗАЩИТА
-       ════════════════════════════════════════ */
-    { group:'kingsindian', id:'kingsindian', name:'Староиндийская защита',
-        desc:'Вы играете чёрными. Гибкая защита на 1.d4.', fen:'', side:'b',
-        ucis:['d2d4','g8f6','c2c4','g7g6','b1c3','f8g7','e2e4','d7d6','g1f3','e8g8','f1e2','e7e5'],
-        hints:['1... Nf6 — староиндийская','2... g6 — подготовка Bg7','3... Bg7 — фианкетто','4... d6 — поддержка центра','5... O-O — рокировка','6... e5 — контратака'] },
-
-    /* ════════════════════════════════════════
-       ЗАДАЧИ
-       ════════════════════════════════════════ */
-    { group:'puzzles', id:'scholar', name:'Детский мат',
-        desc:'Найдите мат в 1 ход.', fen:'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', side:'w',
-        ucis:['h5f7'], hints:['Ферзь на f7 — мат!'] },
-    { group:'puzzles', id:'fork', name:'Вилка конём',
-        desc:'Найдите двойной удар конём.', fen:'2r3k1/5ppp/8/3N4/8/8/5PPP/6K1 w - - 0 1', side:'w',
-        ucis:['d5e7'], hints:['Ne7+ — атакует короля и ладью!'] },
-];
-
+function loadOpeningsFromServer(callback) {
+    fetch('/api/openings').then(function(r) { return r.json(); }).then(function(items) {
+        trainingItems.length = 0;
+        var seen = {};
+        items.forEach(function(item) {
+            trainingItems.push(item);
+            if (!seen[item.group]) {
+                seen[item.group] = true;
+                groupOrder.push(item.group);
+                groupNames[item.group] = item.openingName;
+                groupCategories[item.group] = 'Дебюты';
+            }
+        });
+        if (callback) callback();
+    }).catch(function() {
+        if (callback) callback();
+    });
+}
 
 const training = { active: false, item: null, moveIndex: 0, hintsOn: true };
 let isPuzzleMode = false;
@@ -715,6 +580,7 @@ function updateTrainingUI() {
     if (!training.active || !training.item) {
         document.getElementById('openingDesc').innerText = '';
         document.getElementById('trainingHint').classList.add('hidden');
+        document.getElementById('evalAnnotation').classList.add('hidden');
         return;
     }
     var o = training.item;
@@ -728,11 +594,39 @@ function updateTrainingUI() {
         document.getElementById('puzzleProgressFill').style.width = pct + '%';
         document.getElementById('puzzleProgressText').innerText = cur >= total ? 'Завершено!' : 'Ход ' + Math.floor(cur / 2 + 1) + ' из ' + Math.ceil(total / 2);
     }
+
+    // Show annotation from rich data
+    var annotEl = document.getElementById('evalAnnotation');
+    if (o.annotations && cur < o.annotations.length && o.annotations[cur]) {
+        annotEl.innerHTML = '\uD83D\uDCA1 ' + o.annotations[cur];
+        annotEl.classList.remove('hidden');
+    } else if (o.annotations && cur > 0 && cur - 1 < o.annotations.length && o.annotations[cur - 1]) {
+        annotEl.innerHTML = '\uD83D\uDCA1 ' + o.annotations[cur - 1];
+        annotEl.classList.remove('hidden');
+    } else {
+        annotEl.classList.add('hidden');
+    }
+
+    // Show evaluation
+    var evalEl = document.getElementById('moveEval');
+    if (o.evaluations && cur < o.evaluations.length) {
+        var ev = o.evaluations[cur];
+        if (typeof ev === 'number' && !isNaN(ev)) {
+            evalEl.textContent = (ev >= 0 ? '+' : '') + ev.toFixed(2);
+            evalEl.style.color = ev >= 0 ? '#8BC34A' : '#ff8a80';
+            evalEl.classList.remove('hidden');
+        } else {
+            evalEl.classList.add('hidden');
+        }
+    } else {
+        evalEl.classList.add('hidden');
+    }
+
     if (isPlayerMove(cur, o.side) && training.hintsOn && cur < o.ucis.length) {
         var hi = hintIdx(cur, o.side);
         if (o.hints && o.hints[hi]) {
             document.getElementById('trainingHint').classList.remove('hidden');
-            document.getElementById('trainingHint').innerText = '\u25B6 ' + o.hints[hi];
+            document.getElementById('trainingHint').innerHTML = '\u25B6 ' + o.hints[hi];
         }
     } else {
         document.getElementById('trainingHint').classList.add('hidden');
@@ -1083,8 +977,10 @@ window.addEventListener('resize', function() {
 
 /* ─── INIT ─── */
 
-populateTrainingSelect();
-updateGroupProgressDisplay();
+loadOpeningsFromServer(function() {
+    populateTrainingSelect();
+    updateGroupProgressDisplay();
+});
 createBoard('start', 'white');
 updateStatus();
 

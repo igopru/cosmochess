@@ -300,6 +300,26 @@ select {
     color: #d0d070;
     font-weight: bold;
 }
+.training-annotation {
+    background: #1a2a3a;
+    border: 1px solid #2a4a6a;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.82rem;
+    margin-bottom: 0.3rem;
+    color: #b0d0f0;
+    line-height: 1.4;
+}
+.training-annotation b {
+    color: #FFD700;
+}
+.move-eval {
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+    font-family: monospace;
+}
 .group-progress {
     font-size: 0.8rem;
     color: #8bc34a;
