@@ -1,0 +1,582 @@
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #070714;
+    color: #d0d0e0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 8px;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+}
+.container {
+    text-align: center;
+    background: rgba(18, 18, 36, 0.95);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.6), 0 0 60px rgba(80, 80, 200, 0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    width: 100%;
+    max-width: 440px;
+    overscroll-behavior: none;
+    position: relative;
+    z-index: 1;
+}
+h1 {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+    color: #e0e0f0;
+}
+#status {
+    margin-bottom: 0.8rem;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #b0b0c0;
+    min-height: 1.5em;
+}
+#board {
+    width: 400px;
+    touch-action: none;
+    position: relative;
+}
+#board * {
+    touch-action: none;
+}
+
+/* ─── Board + Eval Bar ─── */
+.board-row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    margin: 0 auto;
+    width: 100%;
+}
+.eval-bar {
+    width: 24px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    margin-right: 6px;
+    background: #333;
+}
+.eval-fill-white {
+    position: absolute;
+    bottom: 50%;
+    left: 0;
+    right: 0;
+    height: 0%;
+    background: linear-gradient(to top, #8BC34A, #4CAF50);
+    transition: height 0.3s;
+    will-change: height;
+}
+.eval-fill-black {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 0%;
+    background: linear-gradient(to bottom, #ff8a80, #f44336);
+    transition: height 0.3s;
+    will-change: height;
+}
+.eval-center {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255,255,255,0.2);
+}
+.eval-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 3px rgba(0,0,0,0.7);
+    white-space: nowrap;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* ─── Controls ─── */
+.controls-row {
+    margin-top: 0.6rem;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+button:active {
+    transform: scale(0.96);
+}
+button:hover {
+    background-color: #45a049;
+}
+button:disabled {
+    background-color: #3a3a3a !important;
+    color: #888;
+    cursor: default;
+    transform: none;
+}
+#flipBtn {
+    background-color: #2196F3;
+}
+#flipBtn:hover {
+    background-color: #0b7dda;
+}
+#hintBtn {
+    background-color: #FF9800;
+}
+#hintBtn:hover {
+    background-color: #e68900;
+}
+#hintBtn:disabled {
+    background-color: #3a3a3a !important;
+}
+#copyBtn {
+    background-color: #FF9800;
+}
+#copyBtn:hover {
+    background-color: #e68900;
+}
+#dragToggle {
+    background-color: #607D8B;
+    font-size: 0.8rem;
+    padding: 8px 10px;
+}
+#dragToggle.active {
+    background-color: #FF9800;
+}
+#reviewBtn {
+    background-color: #607D8B;
+}
+#reviewBtn:hover {
+    background-color: #546E7A;
+}
+.btn-danger {
+    background-color: #f44336;
+}
+.btn-danger:hover {
+    background-color: #D32F2F;
+}
+select {
+    padding: 8px 12px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: #1e1e3a;
+    color: #d0d0e0;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+/* ─── Review Controls ─── */
+.review-controls {
+    margin-top: 0.6rem;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 8px;
+    background: #1a1a34;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+}
+.review-controls button {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+}
+.review-info {
+    width: 100%;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #c0c0d0;
+    min-height: 1.2em;
+    padding-top: 2px;
+}
+
+/* ─── Training ─── */
+.training-section {
+    margin-top: 1rem;
+    text-align: left;
+}
+.training-toggle {
+    background-color: #673AB7;
+    width: 100%;
+    padding: 10px;
+    font-size: 0.95rem;
+}
+.training-toggle:hover {
+    background-color: #5E35B1;
+}
+.training-toggle.active {
+    background-color: #FF5722;
+}
+.training-toggle.active:hover {
+    background-color: #E64A19;
+}
+.training-panel {
+    background: #1a1a34;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-top: 0.5rem;
+    transition: opacity 0.2s;
+}
+.training-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.training-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+.hint-label {
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #c0c0d0;
+}
+.hint-label input {
+    cursor: pointer;
+}
+.training-panel select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    background: #1e1e3a;
+    color: #d0d0e0;
+}
+.opening-desc {
+    font-size: 0.8rem;
+    color: #a0a0b0;
+    margin-bottom: 0.5rem;
+    min-height: 1.2em;
+}
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #2a2a4a;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.3rem;
+}
+.progress-fill {
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+.progress-text {
+    font-size: 0.75rem;
+    color: #9090a0;
+    margin-bottom: 0.4rem;
+}
+.training-hint {
+    background: #2a2a15;
+    border: 1px solid #5a5a20;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    color: #d0d070;
+    font-weight: bold;
+}
+.training-annotation {
+    background: #1a2a3a;
+    border: 1px solid #2a4a6a;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.82rem;
+    margin-bottom: 0.3rem;
+    color: #b0d0f0;
+    line-height: 1.4;
+}
+.training-annotation b {
+    color: #FFD700;
+}
+.move-eval {
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+    font-family: monospace;
+}
+.group-progress {
+    font-size: 0.8rem;
+    color: #8bc34a;
+    margin-bottom: 0.3rem;
+    padding: 4px 8px;
+    background: rgba(76,175,80,0.08);
+    border-radius: 4px;
+    border: 1px solid rgba(76,175,80,0.15);
+}
+
+.reset-progress-row {
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.reset-progress-btn {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    background: transparent;
+    color: #888;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reset-progress-btn:hover {
+    background: rgba(244,67,54,0.1);
+    color: #f44336;
+    border-color: #f44336;
+}
+
+.training-actions {
+    display: flex;
+    gap: 8px;
+}
+.training-start {
+    background-color: #4CAF50;
+    flex: 1;
+}
+.training-start:hover {
+    background-color: #388E3C;
+}
+.training-stop {
+    background-color: #f44336;
+    flex: 1;
+}
+.training-stop:hover {
+    background-color: #D32F2F;
+}
+.training-stop:disabled {
+    background-color: #3a3a3a !important;
+    cursor: default;
+}
+
+/* ─── PGN Section ─── */
+.pgn-section {
+    margin-top: 1rem;
+    text-align: left;
+}
+.pgn-input {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    resize: vertical;
+    margin-bottom: 0.5rem;
+    background: #1a1a34;
+    color: #d0d0e0;
+}
+
+/* ─── PGN Display ─── */
+.pgn-box {
+    margin-top: 0.8rem;
+    font-family: monospace;
+    background: #1a1a34;
+    border: 1px solid #2a2a4a;
+    padding: 8px;
+    border-radius: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+    text-align: left;
+    font-size: 0.8rem;
+    word-break: break-all;
+    line-height: 1.4;
+    color: #c0c0d0;
+}
+.flag-blunder {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+.flag-mistake {
+    color: #ffa726;
+    font-weight: bold;
+}
+.flag-good {
+    color: #66bb6a;
+    font-weight: bold;
+}
+.pgn-move {
+    white-space: nowrap;
+}
+
+/* ─── Legal Move Indicators ─── */
+.legal-move {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.55) 14%, transparent 20%) !important;
+}
+.legal-capture {
+    background-image: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 52%, transparent 60%) !important;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.4) !important;
+}
+
+/* ─── Move Highlight ─── */
+.highlight-last {
+    background: rgba(255, 235, 59, 0.45) !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 235, 59, 0.9);
+}
+.highlight-hint {
+    background: rgba(76, 175, 80, 0.4) !important;
+    box-shadow: inset 0 0 0 3px rgba(76, 175, 80, 0.95);
+}
+.highlight-train-prev {
+    background: rgba(255, 235, 59, 0.5) !important;
+    box-shadow: inset 0 0 0 3px rgba(255, 235, 59, 1);
+}
+.highlight-select {
+    background: rgba(255, 235, 59, 0.35) !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 235, 59, 0.85);
+}
+
+/* ─── Puzzles ─── */
+.puzzle-filters {
+    margin-bottom: 0.5rem;
+}
+.puzzle-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.4rem;
+}
+.puzzle-label {
+    font-size: 0.8rem;
+    color: #a0a0b0;
+    min-width: 60px;
+    flex-shrink: 0;
+}
+.puzzle-filter-row select {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: #1e1e3a;
+    color: #d0d0e0;
+}
+.puzzle-info {
+    background: #1a1a34;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 0.5rem;
+}
+.puzzle-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+.puzzle-rating {
+    color: #FFD700;
+    font-weight: bold;
+}
+.puzzle-themes {
+    color: #90CAF9;
+    font-size: 0.8rem;
+    text-align: right;
+    max-width: 60%;
+    line-height: 1.3;
+}
+.puzzle-progress {
+    margin-bottom: 0.5rem;
+}
+
+/* ─── Stars ─── */
+.star {
+    position: fixed;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+    0% { opacity: 0.1; transform: scale(0.8); }
+    100% { opacity: 0.9; transform: scale(1); }
+}
+
+/* ─── Toast ─── */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2a4a;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 100;
+}
+.toast.show {
+    opacity: 1;
+}
+
+/* ─── Utils ─── */
+.hidden {
+    display: none;
+}
+
+@media (max-width: 460px) {
+    .container {
+        padding: 0.6rem;
+        border-radius: 8px;
+    }
+    h1 {
+        font-size: 1.1rem;
+    }
+    button {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+    .controls-row {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        gap: 6px;
+        padding-bottom: 4px;
+    }
+    .controls-row > * {
+        flex-shrink: 0;
+    }
+}
