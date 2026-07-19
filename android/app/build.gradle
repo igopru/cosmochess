@@ -1,0 +1,30 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.cosmochess.app'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.cosmochess.app'
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '1.1.0'
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'androidx.webkit:webkit:1.9.0'
+}

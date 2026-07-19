@@ -35,7 +35,27 @@ node server.js
 
 Откройте `http://localhost:3000`.
 
-Для игры с телефона узнайте IP компьютера в сети:
+## Android-приложение (локально, без интернета)
+
+В папке `android/` — готовый проект для сборки нативного APK.
+
+Встроенный HTTP-сервер (NanoHTTPD) подаёт статику и API — всё работает
+локально, без интернета и без запуска Node.js.
+
+**Требования:** Android Studio или Gradle, Android SDK 34, Java 17.
+
+```bash
+cd android
+bash build-apk.sh
+```
+
+Или откройте папку `android/` в Android Studio и нажмите Run.
+
+APK будет в `android/app/build/outputs/apk/release/app-release.apk`.
+
+## Игра с телефона (без сборки)
+
+Узнайте IP компьютера в сети:
 ```bash
 ip addr show | grep inet
 ```
@@ -84,6 +104,13 @@ cosmochess/
 ├── scrape-openings.js           — парсинг дебютов с chessboss.ru
 ├── puzzles.json                 — 80 000 задач (сгенерированный, в .gitignore)
 ├── openings.json                — 366 дебютных вариаций
+├── android/                     — нативное Android-приложение (APK)
+│   ├── build-apk.sh             — скрипт сборки
+│   ├── app/
+│   │   └── src/main/java/com/cosmochess/app/
+│   │       ├── MainActivity.java  — WebView + встроенный сервер
+│   │       └── Server.java        — NanoHTTPD (API + статика)
+│   └── build.gradle
 ├── public/
 │   ├── index.html               — интерфейс
 │   ├── style.css                — стили (адаптивная вёрстка)
