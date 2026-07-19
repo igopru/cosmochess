@@ -37,21 +37,20 @@ node server.js
 
 ## Android-приложение (локально, без интернета)
 
-В папке `android/` — готовый проект для сборки нативного APK.
+Готовый проект для сборки нативного APK —
+см. **[ANDROID.md](ANDROID.md)** (полная документация по сборке,
+установке, подписи).
 
-Встроенный HTTP-сервер (NanoHTTPD) подаёт статику и API — всё работает
-локально, без интернета и без запуска Node.js.
-
-**Требования:** Android Studio или Gradle, Android SDK 34, Java 17.
+Кратко:
 
 ```bash
 cd android
 bash build-apk.sh
+adb install app/build/outputs/apk/release/app-release.apk
 ```
 
-Или откройте папку `android/` в Android Studio и нажмите Run.
-
-APK будет в `android/app/build/outputs/apk/release/app-release.apk`.
+Встроенный HTTP-сервер (NanoHTTPD) подаёт статику и все API —
+всё работает локально, без интернета и без запуска Node.js.
 
 ## Игра с телефона (без сборки)
 
@@ -104,6 +103,7 @@ cosmochess/
 ├── scrape-openings.js           — парсинг дебютов с chessboss.ru
 ├── puzzles.json                 — 80 000 задач (сгенерированный, в .gitignore)
 ├── openings.json                — 366 дебютных вариаций
+├── ANDROID.md                   — документация сборки Android APK
 ├── android/                     — нативное Android-приложение (APK)
 │   ├── build-apk.sh             — скрипт сборки
 │   ├── app/
