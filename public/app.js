@@ -99,6 +99,44 @@ let hintFen = '';
 let trainingHighlight = { from: '', to: '' };
 let dragMode = false;
 
+/* ─── SETTINGS PERSISTENCE ─── */
+
+const SETTINGS_KEY = 'cosmochess_settings';
+
+function loadSettings() {
+    var s;
+    try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch(e) { s = {}; }
+    ['difficulty', 'colorSelect', 'puzzleDifficulty', 'puzzleTheme'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (s[id] && el) el.value = s[id];
+    });
+    if (s.dragMode !== undefined) {
+        dragMode = s.dragMode;
+        var dt = document.getElementById('dragToggle');
+        if (dt) {
+            dt.textContent = dragMode ? '\u270B Drag' : '\uD83D\uDC0D Click';
+            dt.classList.toggle('active', dragMode);
+        }
+    }
+    if (s.hintCheck !== undefined) {
+        var hc = document.getElementById('hintCheck');
+        if (hc) hc.checked = s.hintCheck;
+    }
+    userColor = (s.colorSelect || 'w');
+}
+
+function saveSettings() {
+    var s = {
+        difficulty: document.getElementById('difficulty').value,
+        colorSelect: document.getElementById('colorSelect').value,
+        puzzleDifficulty: document.getElementById('puzzleDifficulty').value,
+        puzzleTheme: document.getElementById('puzzleTheme').value,
+        dragMode: dragMode,
+        hintCheck: document.getElementById('hintCheck').checked
+    };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
+
 function squareClass(sq) {
     return 'square-' + sq;
 }
@@ -1069,6 +1107,7 @@ window.addEventListener('resize', function() {
 
 /* ─── INIT ─── */
 
+loadSettings();
 loadOpeningsFromServer(function() {
     populateTrainingSelect();
     updateGroupProgressDisplay();
@@ -1139,6 +1178,7 @@ document.getElementById('dragToggle').addEventListener('click', function() {
     initBoard(game.fen(), board ? board.orientation() : undefined);
     highlightLastMove();
     updateStatus();
+    saveSettings();
     showToast(dragMode ? 'Режим перетаскивания' : 'Режим щелчков');
 });
 
@@ -1146,10 +1186,12 @@ document.getElementById('difficulty').addEventListener('change', function() {
     if (engineReady) {
         stockfish.postMessage('setoption name UCI_Elo value ' + parseInt(this.value, 10));
     }
+    saveSettings();
     showToast('Уровень сложности изменён');
 });
 
 document.getElementById('colorSelect').addEventListener('change', function() {
+    saveSettings();
     showToast('Вы играете за ' + (this.value === 'w' ? 'белых' : 'чёрных'));
 });
 
@@ -1162,6 +1204,7 @@ document.getElementById('startTrainingBtn').addEventListener('click', function()
 document.getElementById('stopTrainingBtn').addEventListener('click', function() { stopTraining(); });
 document.getElementById('hintCheck').addEventListener('change', function() {
     training.hintsOn = this.checked;
+    saveSettings();
     if (training.active) updateTrainingUI();
 });
 document.getElementById('trainingSelect').addEventListener('change', function() {
@@ -1237,6 +1280,9 @@ document.getElementById('puzzleToggle').addEventListener('click', function() {
         }).catch(function() {});
     }
 });
+
+document.getElementById('puzzleDifficulty').addEventListener('change', saveSettings);
+document.getElementById('puzzleTheme').addEventListener('change', saveSettings);
 
 document.getElementById('getPuzzleBtn').addEventListener('click', function() {
     if (review.active) { showToast('Сначала выйдите из разбора'); return; }
