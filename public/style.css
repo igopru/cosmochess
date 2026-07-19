@@ -160,6 +160,14 @@ button:disabled {
 #copyBtn:hover {
     background-color: #e68900;
 }
+#dragToggle {
+    background-color: #607D8B;
+    font-size: 0.8rem;
+    padding: 8px 10px;
+}
+#dragToggle.active {
+    background-color: #FF9800;
+}
 #reviewBtn {
     background-color: #607D8B;
 }

@@ -97,6 +97,7 @@ let isHintQuery = false;
 let hintBestMove = null;
 let hintFen = '';
 let trainingHighlight = { from: '', to: '' };
+let dragMode = false;
 
 function squareClass(sq) {
     return 'square-' + sq;
@@ -337,7 +338,7 @@ function exitReviewMode() {
     } else {
         game.reset();
     }
-    rebuildBoard(game.fen());
+    initBoard(game.fen());
     updateStatus();
     if (!game.game_over()) setTimeout(function() { analyzePosition(); }, 300);
 }
@@ -407,28 +408,25 @@ function setBoardElementWidth() {
     if (evalBar) evalBar.style.height = boardSize + 'px';
 }
 
-function createBoard(position, orientation) {
-    setBoardElementWidth();
-    var config = {
-        draggable: false,
+function makeBoardConfig(position, orientation) {
+    return {
+        draggable: true,
         position: position || 'start',
         pieceTheme: PIECE_IMG,
-        orientation: orientation || (userColor === 'b' ? 'black' : 'white')
+        orientation: orientation || (userColor === 'b' ? 'black' : 'white'),
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onSnapEnd: onSnapEnd
     };
-    board = Chessboard('board', config);
 }
 
-function rebuildBoard(position, orientation) {
+function initBoard(position, orientation) {
     if (board) board.destroy();
     setBoardElementWidth();
-    var config = {
-        draggable: false,
-        position: position || game.fen(),
-        pieceTheme: PIECE_IMG,
-        orientation: orientation || (userColor === 'b' ? 'black' : 'white')
-    };
-    board = Chessboard('board', config);
+    board = Chessboard('board', makeBoardConfig(position, orientation));
     ensureBoardSvg();
+    boardClickAttached = false;
+    attachBoardClick();
 }
 
 /* ─── ARROW OVERLAY ─── */
@@ -574,15 +572,8 @@ function startTraining(id) {
     document.getElementById('trainingSelect').disabled = true;
     document.getElementById('trainingToggle').textContent = '\u{1F393} ' + (groupNames[item.group] || item.group) + ': ' + item.name;
     document.getElementById('trainingToggle').classList.add('active');
-    if (board) board.destroy();
-    setBoardElementWidth();
     var startPos = item.fen || 'start';
-    var config = {
-        draggable: false, position: startPos, pieceTheme: PIECE_IMG,
-        orientation: item.side === 'b' ? 'black' : 'white'
-    };
-    board = Chessboard('board', config);
-    ensureBoardSvg();
+    initBoard(startPos, item.side === 'b' ? 'black' : 'white');
     if (item.fen) game.load(item.fen);
     updateTrainingUI();
     if (!isPlayerMove(0, item.side)) scheduleTrainingComputerMove();
@@ -622,11 +613,7 @@ function stopTraining() {
         document.getElementById('puzzleProgress').classList.add('hidden');
     }
     game.reset();
-    if (board) {
-        board.destroy();
-        setBoardElementWidth();
-        board = Chessboard('board', { draggable: false, position: 'start', pieceTheme: PIECE_IMG, orientation: userColor === 'b' ? 'black' : 'white' });
-    }
+    initBoard('start', userColor === 'b' ? 'black' : 'white');
     updateStatus();
 }
 
@@ -816,7 +803,17 @@ function makeMove(source, target) {
     }
 }
 
-function onDragStart() { return false; }
+function onDragStart(source, piece, pos, orientation) {
+    if (!dragMode) return false;
+    if (review.active || game.game_over()) return false;
+    if (training.active) {
+        var pc = training.item.side === 'w' ? 'w' : 'b';
+        if (piece.charAt(0) !== pc || game.turn() !== pc || !isPlayerMove(training.moveIndex, training.item.side)) return false;
+        return true;
+    }
+    if (piece.charAt(0) !== userColor || game.turn() !== userColor) return false;
+    return true;
+}
 function onDrop(source, target) { makeMove(source, target); }
 function onSnapEnd() {
     board.position(game.fen());
@@ -1065,7 +1062,7 @@ window.addEventListener('resize', function() {
         if (Math.abs(newSize - boardSize) > 5) {
             setBoardElementWidth();
             if (board && board.resize) board.resize();
-            else rebuildBoard();
+            else initBoard(game.fen(), board ? board.orientation() : undefined);
         }
     }, 250);
 });
@@ -1076,7 +1073,7 @@ loadOpeningsFromServer(function() {
     populateTrainingSelect();
     updateGroupProgressDisplay();
 });
-createBoard('start', 'white');
+initBoard('start', 'white');
 updateStatus();
 
 /* ─── EVENT LISTENERS ─── */
@@ -1094,7 +1091,7 @@ document.getElementById('resetBtn').addEventListener('click', function() {
     userColor = sel.value;
     game.reset();
     var orientation = userColor === 'b' ? 'black' : 'white';
-    rebuildBoard('start', orientation);
+    initBoard('start', orientation);
     updateStatus();
     if (userColor === 'b' && !game.game_over()) {
         setTimeout(function() { makeEngineMove(); }, 500);
@@ -1132,6 +1129,18 @@ function fallbackCopy(text) {
 }
 
 document.getElementById('hintBtn').addEventListener('click', showBestMoveHint);
+
+document.getElementById('dragToggle').addEventListener('click', function() {
+    if (training.active) { showToast('Сначала выйдите из обучения'); return; }
+    if (review.active) { showToast('Сначала выйдите из разбора'); return; }
+    dragMode = !dragMode;
+    this.textContent = dragMode ? '\u270B Drag' : '\uD83D\uDC0D Click';
+    this.classList.toggle('active');
+    initBoard(game.fen(), board ? board.orientation() : undefined);
+    highlightLastMove();
+    updateStatus();
+    showToast(dragMode ? 'Режим перетаскивания' : 'Режим щелчков');
+});
 
 document.getElementById('difficulty').addEventListener('change', function() {
     if (engineReady) {
@@ -1200,9 +1209,7 @@ document.getElementById('pgnLoadBtn').addEventListener('click', function() {
         showToast('Ошибка: неверный формат PGN');
         return;
     }
-    if (board) board.destroy();
-    setBoardElementWidth();
-    board = Chessboard('board', { draggable: false, position: game.fen(), pieceTheme: PIECE_IMG, orientation: 'white' });
+    initBoard(game.fen(), 'white');
     updateStatus();
     document.getElementById('pgnPanel').classList.add('hidden');
     enterReviewMode();
@@ -1300,15 +1307,7 @@ function startPuzzle(puzzle) {
     document.getElementById('puzzleThemes').textContent = puzzle.themes;
     document.getElementById('puzzleProgress').classList.remove('hidden');
 
-    if (board) board.destroy();
-    setBoardElementWidth();
-    board = Chessboard('board', {
-        draggable: false,
-        position: fenAfterFirst,
-        pieceTheme: PIECE_IMG,
-        orientation: puzzle.side === 'b' ? 'black' : 'white'
-    });
-
+    initBoard(fenAfterFirst, puzzle.side === 'b' ? 'black' : 'white');
     updateTrainingUI();
     if (!isPlayerMove(0, puzzle.side)) scheduleTrainingComputerMove();
 }
