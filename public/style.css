@@ -3,8 +3,8 @@
 }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
+    background-color: #070714;
+    color: #d0d0e0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -12,26 +12,31 @@ body {
     margin: 0;
     padding: 8px;
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
 }
 .container {
     text-align: center;
-    background: white;
+    background: rgba(18, 18, 36, 0.95);
     padding: 1rem;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.6), 0 0 60px rgba(80, 80, 200, 0.06);
+    border: 1px solid rgba(255,255,255,0.06);
     width: 100%;
     max-width: 440px;
     overscroll-behavior: none;
+    position: relative;
+    z-index: 1;
 }
 h1 {
     font-size: 1.3rem;
     margin: 0 0 0.5rem;
+    color: #e0e0f0;
 }
 #status {
     margin-bottom: 0.8rem;
     font-weight: bold;
     font-size: 1rem;
-    color: #555;
+    color: #b0b0c0;
     min-height: 1.5em;
 }
 #board {
@@ -57,7 +62,7 @@ h1 {
     position: relative;
     overflow: hidden;
     margin-right: 6px;
-    background: #555;
+    background: #333;
 }
 .eval-fill-white {
     position: absolute;
@@ -83,7 +88,7 @@ h1 {
     left: 0;
     right: 0;
     height: 1px;
-    background: rgba(0,0,0,0.35);
+    background: rgba(255,255,255,0.2);
 }
 .eval-text {
     position: absolute;
@@ -126,7 +131,8 @@ button:hover {
     background-color: #45a049;
 }
 button:disabled {
-    background-color: #ccc !important;
+    background-color: #3a3a3a !important;
+    color: #888;
     cursor: default;
     transform: none;
 }
@@ -135,6 +141,15 @@ button:disabled {
 }
 #flipBtn:hover {
     background-color: #0b7dda;
+}
+#hintBtn {
+    background-color: #FF9800;
+}
+#hintBtn:hover {
+    background-color: #e68900;
+}
+#hintBtn:disabled {
+    background-color: #3a3a3a !important;
 }
 #copyBtn {
     background-color: #FF9800;
@@ -156,10 +171,11 @@ button:disabled {
 }
 select {
     padding: 8px 12px;
-    border: 1px solid #ccc;
+    border: 1px solid #3a3a5a;
     border-radius: 6px;
     font-size: 0.9rem;
-    background: white;
+    background: #1e1e3a;
+    color: #d0d0e0;
     cursor: pointer;
     touch-action: manipulation;
 }
@@ -173,7 +189,8 @@ select {
     flex-wrap: wrap;
     align-items: center;
     padding: 8px;
-    background: #f0f4ff;
+    background: #1a1a34;
+    border: 1px solid #2a2a4a;
     border-radius: 8px;
 }
 .review-controls button {
@@ -184,7 +201,7 @@ select {
     width: 100%;
     text-align: center;
     font-size: 0.85rem;
-    color: #333;
+    color: #c0c0d0;
     min-height: 1.2em;
     padding-top: 2px;
 }
@@ -210,8 +227,8 @@ select {
     background-color: #E64A19;
 }
 .training-panel {
-    background: #f8f8ff;
-    border: 1px solid #ddd;
+    background: #1a1a34;
+    border: 1px solid #2a2a4a;
     border-radius: 8px;
     padding: 0.8rem;
     margin-top: 0.5rem;
@@ -233,6 +250,7 @@ select {
     display: flex;
     align-items: center;
     gap: 4px;
+    color: #c0c0d0;
 }
 .hint-label input {
     cursor: pointer;
@@ -240,22 +258,23 @@ select {
 .training-panel select {
     width: 100%;
     padding: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid #3a3a5a;
     border-radius: 6px;
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
-    background: white;
+    background: #1e1e3a;
+    color: #d0d0e0;
 }
 .opening-desc {
     font-size: 0.8rem;
-    color: #666;
+    color: #a0a0b0;
     margin-bottom: 0.5rem;
     min-height: 1.2em;
 }
 .progress-bar {
     width: 100%;
     height: 8px;
-    background: #e0e0e0;
+    background: #2a2a4a;
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 0.3rem;
@@ -268,19 +287,50 @@ select {
 }
 .progress-text {
     font-size: 0.75rem;
-    color: #888;
+    color: #9090a0;
     margin-bottom: 0.4rem;
 }
 .training-hint {
-    background: #FFF8E1;
-    border: 1px solid #FFE082;
+    background: #2a2a15;
+    border: 1px solid #5a5a20;
     border-radius: 6px;
     padding: 8px;
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
-    color: #F57F17;
+    color: #d0d070;
     font-weight: bold;
 }
+.group-progress {
+    font-size: 0.8rem;
+    color: #8bc34a;
+    margin-bottom: 0.3rem;
+    padding: 4px 8px;
+    background: rgba(76,175,80,0.08);
+    border-radius: 4px;
+    border: 1px solid rgba(76,175,80,0.15);
+}
+
+.reset-progress-row {
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.reset-progress-btn {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    background: transparent;
+    color: #888;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reset-progress-btn:hover {
+    background: rgba(244,67,54,0.1);
+    color: #f44336;
+    border-color: #f44336;
+}
+
 .training-actions {
     display: flex;
     gap: 8px;
@@ -300,7 +350,7 @@ select {
     background-color: #D32F2F;
 }
 .training-stop:disabled {
-    background-color: #ccc !important;
+    background-color: #3a3a3a !important;
     cursor: default;
 }
 
@@ -313,19 +363,22 @@ select {
     width: 100%;
     min-height: 60px;
     padding: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid #3a3a5a;
     border-radius: 6px;
     font-family: monospace;
     font-size: 0.8rem;
     resize: vertical;
     margin-bottom: 0.5rem;
+    background: #1a1a34;
+    color: #d0d0e0;
 }
 
 /* ─── PGN Display ─── */
 .pgn-box {
     margin-top: 0.8rem;
     font-family: monospace;
-    background: #eee;
+    background: #1a1a34;
+    border: 1px solid #2a2a4a;
     padding: 8px;
     border-radius: 6px;
     max-height: 120px;
@@ -334,27 +387,116 @@ select {
     font-size: 0.8rem;
     word-break: break-all;
     line-height: 1.4;
+    color: #c0c0d0;
 }
 .flag-blunder {
-    color: #d32f2f;
+    color: #ff6b6b;
     font-weight: bold;
 }
 .flag-mistake {
-    color: #f57c00;
+    color: #ffa726;
     font-weight: bold;
 }
 .flag-good {
-    color: #388E3C;
+    color: #66bb6a;
     font-weight: bold;
 }
 .pgn-move {
     white-space: nowrap;
 }
 
+/* ─── Legal Move Indicators ─── */
+.legal-move {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.55) 14%, transparent 20%) !important;
+}
+.legal-capture {
+    background-image: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 52%, transparent 60%) !important;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.4) !important;
+}
+
 /* ─── Move Highlight ─── */
 .highlight-last {
     background: rgba(255, 235, 59, 0.45) !important;
     box-shadow: inset 0 0 0 2px rgba(255, 235, 59, 0.9);
+}
+.highlight-hint {
+    background: rgba(76, 175, 80, 0.4) !important;
+    box-shadow: inset 0 0 0 3px rgba(76, 175, 80, 0.95);
+}
+.highlight-train-prev {
+    background: rgba(255, 235, 59, 0.5) !important;
+    box-shadow: inset 0 0 0 3px rgba(255, 235, 59, 1);
+}
+.highlight-select {
+    background: rgba(255, 235, 59, 0.35) !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 235, 59, 0.85);
+}
+
+/* ─── Puzzles ─── */
+.puzzle-filters {
+    margin-bottom: 0.5rem;
+}
+.puzzle-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.4rem;
+}
+.puzzle-label {
+    font-size: 0.8rem;
+    color: #a0a0b0;
+    min-width: 60px;
+    flex-shrink: 0;
+}
+.puzzle-filter-row select {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: #1e1e3a;
+    color: #d0d0e0;
+}
+.puzzle-info {
+    background: #1a1a34;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 0.5rem;
+}
+.puzzle-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+.puzzle-rating {
+    color: #FFD700;
+    font-weight: bold;
+}
+.puzzle-themes {
+    color: #90CAF9;
+    font-size: 0.8rem;
+    text-align: right;
+    max-width: 60%;
+    line-height: 1.3;
+}
+.puzzle-progress {
+    margin-bottom: 0.5rem;
+}
+
+/* ─── Stars ─── */
+.star {
+    position: fixed;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+    0% { opacity: 0.1; transform: scale(0.8); }
+    100% { opacity: 0.9; transform: scale(1); }
 }
 
 /* ─── Toast ─── */
@@ -363,7 +505,7 @@ select {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: #333;
+    background: #2a2a4a;
     color: white;
     padding: 10px 20px;
     border-radius: 6px;

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#070714">
+    <link rel="manifest" href="/manifest.json">
     <title>Шахматный тренажёр</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <link rel="stylesheet" href="style.css">
@@ -44,12 +46,8 @@
                 <option value="2000">Очень сложно</option>
                 <option value="2500">Невозможно</option>
             </select>
+            <button id="hintBtn">💡 Подсказка</button>
             <button id="copyBtn">Копировать ходы</button>
-        </div>
-        <div class="controls-row">
-            <button id="rotate90">Поворот 90&deg;</button>
-            <button id="rotate180">Поворот 180&deg;</button>
-            <button id="rotateReset">Сброс</button>
         </div>
         <div class="training-section">
             <button id="trainingToggle" class="training-toggle">&#x1F393; Обучение</button>
@@ -59,6 +57,7 @@
                     <label class="hint-label"><input type="checkbox" id="hintCheck" checked> Подсказки</label>
                 </div>
                 <select id="trainingSelect"></select>
+                <div id="groupProgress" class="group-progress hidden"></div>
                 <div id="openingDesc" class="opening-desc"></div>
                 <div class="progress-bar">
                     <div id="trainingProgress" class="progress-fill" style="width:0%"></div>
@@ -68,6 +67,49 @@
                 <div class="training-actions">
                     <button id="startTrainingBtn" class="training-start">Начать</button>
                     <button id="stopTrainingBtn" class="training-stop" disabled>Выйти</button>
+                </div>
+                <div class="reset-progress-row">
+                    <button id="resetProgressBtn" class="reset-progress-btn">♻ Сбросить прогресс</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="training-section">
+            <button id="puzzleToggle" class="training-toggle">&#x1F3AF; Задачи</button>
+            <div id="puzzlePanel" class="training-panel hidden">
+                <div class="puzzle-filters">
+                    <div class="puzzle-filter-row">
+                        <label class="puzzle-label">Сложность</label>
+                        <select id="puzzleDifficulty">
+                            <option value="0-1200">Лёгкие (&lt;1200)</option>
+                            <option value="1200-1600">Средние (1200-1600)</option>
+                            <option value="1600-2000" selected>Сложные (1600-2000)</option>
+                            <option value="2000-9999">Эксперт (&gt;2000)</option>
+                            <option value="0-9999">Все</option>
+                        </select>
+                    </div>
+                    <div class="puzzle-filter-row">
+                        <label class="puzzle-label">Тема</label>
+                        <select id="puzzleTheme">
+                            <option value="">Все темы</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="puzzleInfo" class="puzzle-info hidden">
+                    <div class="puzzle-meta">
+                        <span id="puzzleRating" class="puzzle-rating"></span>
+                        <span id="puzzleThemes" class="puzzle-themes"></span>
+                    </div>
+                </div>
+                <div class="puzzle-progress hidden" id="puzzleProgress">
+                    <div class="progress-bar">
+                        <div id="puzzleProgressFill" class="progress-fill" style="width:0%"></div>
+                    </div>
+                    <div id="puzzleProgressText" class="progress-text"></div>
+                </div>
+                <div class="training-actions">
+                    <button id="getPuzzleBtn" class="training-start">Получить задачу</button>
+                    <button id="stopPuzzleBtn" class="training-stop" disabled>Выйти</button>
                 </div>
             </div>
         </div>
