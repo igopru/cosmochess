@@ -1,0 +1,10 @@
+name: CosmoChess
+description: Offline chess trainer with 80,000+ puzzles and opening database
+categories:
+  - Games
+  - Education
+packageName: com.cosmochess.app
+sourceCode: https://github.com/igopru/cosmochess
+releases:
+  - https://github.com/igopru/cosmochess/releases
+license: MIT
