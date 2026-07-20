@@ -12,7 +12,7 @@
 | | |
 |---|---|
 | **Игра против Stockfish** | 5 уровней сложности, движок в браузере |
-| **Обучение дебютам** | 18 дебютов, 366 вариаций с аннотациями и оценками от chessboss.ru |
+| **Обучение дебютам** | 18 дебютов, 366 вариаций |
 | **Тактические задачи** | 80 000 задач из Lichess с фильтром по рейтингу и теме |
 | **Drag-and-Drop** | перетаскивание фигур или режим щелчков (кнопка Click/Drag) |
 | **Подсказки на доске** | золотая стрелка показывает следующий ход в обучении |
@@ -152,7 +152,6 @@ cosmochess/
 - [jQuery](https://jquery.com) — DOM-манипуляции (MIT)
 - Фигуры — [Wikipedia / Wikimedia Commons](https://commons.wikimedia.org) (public domain)
 - Задачи — [Lichess Open Database](https://database.lichess.org/) (CC0)
-- Дебюты — [chessboss.ru](https://chessboss.ru/)
 
 ## Лицензия
 
