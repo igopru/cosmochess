@@ -92,9 +92,6 @@ ip addr show | grep inet
 
 ## Дебюты (обучение)
 
-Данные получены парсингом бесплатных уроков с [chessboss.ru](https://chessboss.ru/) —
-скрипт `scrape-openings.js` извлекает 366 вариаций из 18 дебютов.
-
 Каждая вариация содержит:
 - **uci** — последовательность ходов в формате UCI
 - **annotations** — аннотации для каждого хода (с HTML-разметкой)
@@ -102,10 +99,6 @@ ip addr show | grep inet
 - **hints** — текстовые подсказки для игрока
 - **desc** — краткое описание вариации
 
-Для обновления данных:
-```bash
-node scrape-openings.js
-```
 
 ## Структура проекта
 
@@ -114,7 +107,6 @@ cosmochess/
 ├── server.js                    — Express-сервер (API задач и дебютов)
 ├── package.json                 — зависимости (express)
 ├── preprocess-puzzles.js        — конвертация CSV Lichess → puzzles.json
-├── scrape-openings.js           — парсинг дебютов с chessboss.ru
 ├── puzzles.json                 — 80 000 задач (сгенерированный, в .gitignore)
 ├── openings.json                — 366 дебютных вариаций
 ├── ANDROID.md                   — документация сборки Android APK
