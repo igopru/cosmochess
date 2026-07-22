@@ -469,7 +469,7 @@ function setBoardElementWidth() {
 
 function makeBoardConfig(position, orientation) {
     return {
-        draggable: true,
+        draggable: dragMode,
         position: position || 'start',
         pieceTheme: PIECE_IMG,
         orientation: orientation || (userColor === 'b' ? 'black' : 'white'),
@@ -484,7 +484,6 @@ function initBoard(position, orientation) {
     setBoardElementWidth();
     board = Chessboard('board', makeBoardConfig(position, orientation));
     ensureBoardSvg();
-    boardClickAttached = false;
     attachBoardClick();
 }
 
@@ -716,6 +715,8 @@ function finishTraining() {
         showToast('\u{1F389} Отлично! ' + training.item.name + ' \u2014 выполнено!');
         document.getElementById('status').innerText = 'Обучение завершено! Выберите другой дебют или задачу.';
         var currentGroup = training.item.group;
+        game.reset();
+        initBoard('start', userColor === 'b' ? 'black' : 'white');
         populateTrainingSelect();
         document.getElementById('trainingSelect').value = currentGroup;
         populateVariationSelect(currentGroup);
