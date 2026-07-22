@@ -41,11 +41,11 @@
         </div>
         <div class="controls-row">
             <select id="difficulty">
-                <option value="500">Очень легко</option>
-                <option value="1000">Легко</option>
-                <option value="1500" selected>Сложно</option>
-                <option value="2000">Очень сложно</option>
-                <option value="2500">Невозможно</option>
+                <option value="1">Очень легко</option>
+                <option value="2">Легко</option>
+                <option value="3" selected>Сложно</option>
+                <option value="4">Очень сложно</option>
+                <option value="5">Невозможно</option>
             </select>
             <button id="hintBtn">💡 Подсказка</button>
             <button id="copyBtn">Копировать ходы</button>
@@ -58,6 +58,7 @@
                     <label class="hint-label"><input type="checkbox" id="hintCheck" checked> Подсказки</label>
                 </div>
                 <select id="trainingSelect"></select>
+                <select id="variationSelect" class="hidden"></select>
                 <div id="groupProgress" class="group-progress hidden"></div>
                 <div id="openingDesc" class="opening-desc"></div>
                 <div class="progress-bar">

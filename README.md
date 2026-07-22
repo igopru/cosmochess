@@ -12,7 +12,7 @@
 | | |
 |---|---|
 | **Игра против Stockfish** | 5 уровней сложности, движок в браузере |
-| **Обучение дебютам** | 18 дебютов, 366 вариаций с аннотациями и оценками от chessboss.ru |
+| **Обучение дебютам** | 18 дебютов, 366 вариаций с аннотациями и оценками |
 | **Тактические задачи** | 80 000 задач из Lichess с фильтром по рейтингу и теме |
 | **Drag-and-Drop** | перетаскивание фигур или режим щелчков (кнопка Click/Drag) |
 | **Подсказки на доске** | золотая стрелка показывает следующий ход в обучении |
@@ -92,8 +92,8 @@ ip addr show | grep inet
 
 ## Дебюты (обучение)
 
-Данные получены парсингом бесплатных уроков с [chessboss.ru](https://chessboss.ru/) —
-скрипт `scrape-openings.js` извлекает 366 вариаций из 18 дебютов.
+Данные собраны из открытых источников.
+Скрипт `scrape-openings.js` извлекает 366 вариаций из 18 дебютов.
 
 Каждая вариация содержит:
 - **uci** — последовательность ходов в формате UCI
@@ -114,7 +114,7 @@ cosmochess/
 ├── server.js                    — Express-сервер (API задач и дебютов)
 ├── package.json                 — зависимости (express)
 ├── preprocess-puzzles.js        — конвертация CSV Lichess → puzzles.json
-├── scrape-openings.js           — парсинг дебютов с chessboss.ru
+├── scrape-openings.js           — парсинг дебютов из открытых источников
 ├── puzzles.json                 — 80 000 задач (сгенерированный, в .gitignore)
 ├── openings.json                — 366 дебютных вариаций
 ├── ANDROID.md                   — документация сборки Android APK
@@ -160,7 +160,7 @@ cosmochess/
 - [jQuery](https://jquery.com) — DOM-манипуляции (MIT)
 - Фигуры — [Wikipedia / Wikimedia Commons](https://commons.wikimedia.org) (public domain)
 - Задачи — [Lichess Open Database](https://database.lichess.org/) (CC0)
-- Дебюты — [chessboss.ru](https://chessboss.ru/)
+- Дебюты — открытые источники
 
 ## Лицензия
 

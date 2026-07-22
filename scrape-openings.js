@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const CHESSBOSS = 'https://chessboss.ru';
+const SOURCE = 'https://chessboss.ru';
 const OUTPUT = path.join(__dirname, 'openings.json');
 
 function fetch(url) {
@@ -146,7 +146,7 @@ async function scrapeAll() {
     for (const slug of OPENING_SLUGS) {
         console.log('Fetching', slug + '...');
         try {
-            const html = await fetch(CHESSBOSS + '/openings/' + slug);
+            const html = await fetch(SOURCE + '/openings/' + slug);
             const data = extractData(html);
             if (!data) { console.log('  No data found'); continue; }
 

@@ -1,0 +1,92 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.cosmochess.app"
+4    android:versionCode="1"
+5    android:versionName="1.1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="34" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:3:5-67
+11-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:3:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:4:5-79
+12-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:4:22-76
+13
+14    <permission
+14-->[androidx.core:core:1.9.0] /home/father/.gradle/caches/transforms-3/69031d9de34e6ae4e80492f7a424b6d1/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+15        android:name="com.cosmochess.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+15-->[androidx.core:core:1.9.0] /home/father/.gradle/caches/transforms-3/69031d9de34e6ae4e80492f7a424b6d1/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+16        android:protectionLevel="signature" />
+16-->[androidx.core:core:1.9.0] /home/father/.gradle/caches/transforms-3/69031d9de34e6ae4e80492f7a424b6d1/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+17
+18    <uses-permission android:name="com.cosmochess.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+18-->[androidx.core:core:1.9.0] /home/father/.gradle/caches/transforms-3/69031d9de34e6ae4e80492f7a424b6d1/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+18-->[androidx.core:core:1.9.0] /home/father/.gradle/caches/transforms-3/69031d9de34e6ae4e80492f7a424b6d1/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+19
+20    <application
+20-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:5:5-22:19
+21        android:allowBackup="false"
+21-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:6:9-36
+22        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+22-->[androidx.core:core:1.9.0] /home/father/.gradle/caches/transforms-3/69031d9de34e6ae4e80492f7a424b6d1/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
+23        android:debuggable="true"
+24        android:extractNativeLibs="true"
+25        android:label="Шахматный тренажёр"
+25-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:7:9-43
+26        android:networkSecurityConfig="@xml/network_security_config"
+26-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:11:9-69
+27        android:supportsRtl="true"
+27-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:8:9-35
+28        android:theme="@style/AppTheme"
+28-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:9:9-40
+29        android:usesCleartextTraffic="true" >
+29-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:10:9-44
+30        <activity
+30-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:12:9-21:20
+31            android:name="com.cosmochess.app.MainActivity"
+31-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:13:13-41
+32            android:exported="true"
+32-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:14:13-36
+33            android:screenOrientation="portrait"
+33-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:15:13-49
+34            android:windowSoftInputMode="adjustResize" >
+34-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:16:13-55
+35            <intent-filter>
+35-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:17:13-20:29
+36                <action android:name="android.intent.action.MAIN" />
+36-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:18:17-69
+36-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:18:25-66
+37
+38                <category android:name="android.intent.category.LAUNCHER" />
+38-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:19:17-77
+38-->/home/father/project/cosmochess/android/app/src/main/AndroidManifest.xml:19:27-74
+39            </intent-filter>
+40        </activity>
+41
+42        <provider
+42-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+43            android:name="androidx.startup.InitializationProvider"
+43-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:25:13-67
+44            android:authorities="com.cosmochess.app.androidx-startup"
+44-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:26:13-68
+45            android:exported="false" >
+45-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:27:13-37
+46            <meta-data
+46-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+47                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+47-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:30:17-75
+48                android:value="androidx.startup" />
+48-->[androidx.emoji2:emoji2:1.2.0] /home/father/.gradle/caches/transforms-3/d121cbb831bfcedee4bd4dacef3ca9b6/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:31:17-49
+49            <meta-data
+49-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/father/.gradle/caches/transforms-3/09eebfef02b068e8648c27b44a779134/transformed/jetified-lifecycle-process-2.4.1/AndroidManifest.xml:31:13-33:52
+50                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+50-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/father/.gradle/caches/transforms-3/09eebfef02b068e8648c27b44a779134/transformed/jetified-lifecycle-process-2.4.1/AndroidManifest.xml:32:17-78
+51                android:value="androidx.startup" />
+51-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/father/.gradle/caches/transforms-3/09eebfef02b068e8648c27b44a779134/transformed/jetified-lifecycle-process-2.4.1/AndroidManifest.xml:33:17-49
+52        </provider>
+53    </application>
+54
+55</manifest>

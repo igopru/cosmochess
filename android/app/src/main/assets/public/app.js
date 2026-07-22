@@ -48,6 +48,10 @@ let stockfish = new Worker('stockfish.js');
 let engineReady = false;
 let engineBusy = false;
 let boardSize = 0;
+let currentDepth = 12;
+let currentMovetime = 3000;
+let currentSkill = 10;
+let engineMoveTimeout = null;
 
 const PIECE_IMG = 'img/chesspieces/wikipedia/{piece}.png';
 
@@ -147,13 +151,29 @@ function clearLegalMoves() {
 
 /* ─── STOCKFISH ─── */
 
+function setDifficulty(level) {
+    const settings = {
+        1: { depth: 5,  skill: 0,  movetime: 1000 },
+        2: { depth: 8,  skill: 5,  movetime: 2000 },
+        3: { depth: 12, skill: 10, movetime: 3000 },
+        4: { depth: 15, skill: 15, movetime: 5000 },
+        5: { depth: 20, skill: 20, movetime: 8000 }
+    };
+    const config = settings[level] || settings[3];
+    stockfish.postMessage('setoption name Skill Level value ' + config.skill);
+    stockfish.postMessage('setoption name UCI_LimitStrength value false');
+    currentDepth = config.depth;
+    currentMovetime = config.movetime;
+    currentSkill = config.skill;
+    console.log('Сложность: ' + level + ', глубина: ' + config.depth + ', макс. время: ' + config.movetime + 'мс');
+}
+
 stockfish.onmessage = function(event) {
     if (event.data === 'uciok') { stockfish.postMessage('isready'); return; }
     if (event.data === 'readyok') {
         engineReady = true;
-        var initElo = parseInt(document.getElementById('difficulty').value, 10);
-        stockfish.postMessage('setoption name UCI_LimitStrength value true');
-        stockfish.postMessage('setoption name UCI_Elo value ' + initElo);
+        var level = parseInt(document.getElementById('difficulty').value, 10);
+        setDifficulty(level);
         updateEvalBar();
         setTimeout(function() { if (!training.active && !review.active) analyzePosition(); }, 300);
         return;
@@ -209,6 +229,7 @@ stockfish.onmessage = function(event) {
 
         if (!engineBusy) return;
 
+        if (engineMoveTimeout) { clearTimeout(engineMoveTimeout); engineMoveTimeout = null; }
         if (!bestMove || bestMove === '(none)') { engineBusy = false; return; }
 
         const from = bestMove.substring(0, 2);
@@ -280,7 +301,7 @@ function analyzePosition() {
     isAnalyzing = true;
     stockfish.postMessage('setoption name UCI_LimitStrength value false');
     stockfish.postMessage('position fen ' + game.fen());
-    stockfish.postMessage('go depth 8');
+    stockfish.postMessage('go depth ' + currentDepth);
 }
 
 function highlightLastMove() {
@@ -608,6 +629,7 @@ function startTraining(id) {
     document.getElementById('startTrainingBtn').disabled = true;
     document.getElementById('stopTrainingBtn').disabled = false;
     document.getElementById('trainingSelect').disabled = true;
+    document.getElementById('variationSelect').disabled = true;
     document.getElementById('trainingToggle').textContent = '\u{1F393} ' + (groupNames[item.group] || item.group) + ': ' + item.name;
     document.getElementById('trainingToggle').classList.add('active');
     var startPos = item.fen || 'start';
@@ -632,12 +654,18 @@ function stopTraining() {
     document.getElementById('startTrainingBtn').disabled = false;
     document.getElementById('stopTrainingBtn').disabled = true;
     document.getElementById('trainingSelect').disabled = false;
+    document.getElementById('variationSelect').disabled = false;
     document.getElementById('trainingToggle').textContent = '\u{1F393} Обучение';
     document.getElementById('trainingToggle').classList.remove('active');
     document.getElementById('trainingHint').classList.add('hidden');
     document.getElementById('evalAnnotation').classList.add('hidden');
     document.getElementById('moveEval').classList.add('hidden');
-    document.getElementById('openingDesc').innerText = '';
+    if (document.getElementById('trainingSelect').value) {
+        populateVariationSelect(document.getElementById('trainingSelect').value);
+    } else {
+        document.getElementById('openingDesc').innerText = '';
+        document.getElementById('variationSelect').classList.add('hidden');
+    }
     document.getElementById('trainingProgress').style.width = '0%';
     document.getElementById('trainingProgressText').innerText = 'Не начато';
     if (wasPuzzle) {
@@ -687,7 +715,10 @@ function finishTraining() {
     } else {
         showToast('\u{1F389} Отлично! ' + training.item.name + ' \u2014 выполнено!');
         document.getElementById('status').innerText = 'Обучение завершено! Выберите другой дебют или задачу.';
+        var currentGroup = training.item.group;
         populateTrainingSelect();
+        document.getElementById('trainingSelect').value = currentGroup;
+        populateVariationSelect(currentGroup);
         updateGroupProgressDisplay();
     }
 }
@@ -945,11 +976,18 @@ function makeEngineMove() {
     engineBusy = true;
     clearLegalMoves();
     clearHint();
-    var elo = parseInt(document.getElementById('difficulty').value, 10);
-    stockfish.postMessage('setoption name UCI_LimitStrength value true');
-    stockfish.postMessage('setoption name UCI_Elo value ' + elo);
+    if (engineMoveTimeout) clearTimeout(engineMoveTimeout);
+    engineMoveTimeout = setTimeout(function() {
+        if (engineBusy) {
+            engineBusy = false;
+            showToast('Движок перезапущен');
+            if (!game.game_over() && game.turn() !== userColor) {
+                setTimeout(function() { makeEngineMove(); }, 100);
+            }
+        }
+    }, (currentMovetime || 3000) + 4000);
     stockfish.postMessage('position fen ' + game.fen());
-    stockfish.postMessage('go depth 15');
+    stockfish.postMessage('go movetime ' + (currentMovetime || 3000));
 }
 
 /* ─── UI ─── */
@@ -1039,8 +1077,13 @@ function showToast(msg) {
 function populateTrainingSelect() {
     var sel = document.getElementById('trainingSelect');
     sel.innerHTML = '';
-    var progress = getTrainingProgress();
     var catSeen = {};
+    var defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = '\u2014 Выберите дебют \u2014';
+    defaultOpt.disabled = true;
+    defaultOpt.selected = true;
+    sel.appendChild(defaultOpt);
     groupOrder.forEach(function(g) {
         var items = trainingItems.filter(function(i) { return i.group === g; });
         if (!items.length) return;
@@ -1053,33 +1096,35 @@ function populateTrainingSelect() {
             catSeen[cat] = true;
         }
         var stats = getGroupStats(g);
-        var optgroup = document.createElement('optgroup');
-        optgroup.label = groupNames[g] + ' (' + stats.done + '/' + stats.total + ')';
-        items.forEach(function(item) {
-            var opt = document.createElement('option');
-            opt.value = item.id;
-            var done = progress[item.id] ? '\u2713 ' : '   ';
-            opt.textContent = done + item.name;
-            if (progress[item.id]) opt.style.color = '#4caf50';
-            optgroup.appendChild(opt);
-        });
-        sel.appendChild(optgroup);
+        var opt = document.createElement('option');
+        opt.value = g;
+        var allDone = stats.done === stats.total && stats.total > 0;
+        opt.textContent = (allDone ? '\u2713 ' : '   ') + groupNames[g] + ' (' + stats.done + '/' + stats.total + ')';
+        if (allDone) opt.style.color = '#4caf50';
+        sel.appendChild(opt);
     });
-    var puzzleItems = trainingItems.filter(function(i) { return i.group === 'puzzles'; });
-    if (puzzleItems.length) {
-        var stats = getGroupStats('puzzles');
-        var optgroup = document.createElement('optgroup');
-        optgroup.label = 'Задачи (' + stats.done + '/' + stats.total + ')';
-        puzzleItems.forEach(function(item) {
-            var opt = document.createElement('option');
-            opt.value = item.id;
-            var done = progress[item.id] ? '\u2713 ' : '   ';
-            opt.textContent = done + item.name;
-            if (progress[item.id]) opt.style.color = '#4caf50';
-            optgroup.appendChild(opt);
-        });
-        sel.appendChild(optgroup);
+}
+
+function populateVariationSelect(group) {
+    var varSel = document.getElementById('variationSelect');
+    varSel.innerHTML = '';
+    var items = trainingItems.filter(function(i) { return i.group === group; });
+    if (!items.length) {
+        varSel.classList.add('hidden');
+        return;
     }
+    varSel.classList.remove('hidden');
+    var progress = getTrainingProgress();
+    items.forEach(function(item) {
+        var opt = document.createElement('option');
+        opt.value = item.id;
+        var done = progress[item.id] ? '\u2713 ' : '   ';
+        opt.textContent = done + item.name;
+        if (progress[item.id]) opt.style.color = '#4caf50';
+        varSel.appendChild(opt);
+    });
+    var firstItem = items[0];
+    document.getElementById('openingDesc').innerText = firstItem.openingName + ' \u2014 выберите вариацию';
 }
 
 window.addEventListener('focus', function() {
@@ -1110,7 +1155,12 @@ window.addEventListener('resize', function() {
 loadSettings();
 loadOpeningsFromServer(function() {
     populateTrainingSelect();
-    updateGroupProgressDisplay();
+    var firstGroup = groupOrder.length > 0 ? groupOrder[0] : '';
+    if (firstGroup) {
+        document.getElementById('trainingSelect').value = firstGroup;
+        populateVariationSelect(firstGroup);
+        updateGroupProgressDisplay();
+    }
 });
 initBoard('start', 'white');
 updateStatus();
@@ -1183,9 +1233,8 @@ document.getElementById('dragToggle').addEventListener('click', function() {
 });
 
 document.getElementById('difficulty').addEventListener('change', function() {
-    if (engineReady) {
-        stockfish.postMessage('setoption name UCI_Elo value ' + parseInt(this.value, 10));
-    }
+    var level = parseInt(this.value, 10);
+    if (engineReady) setDifficulty(level);
     saveSettings();
     showToast('Уровень сложности изменён');
 });
@@ -1199,7 +1248,9 @@ document.getElementById('trainingToggle').addEventListener('click', function() {
     document.getElementById('trainingPanel').classList.toggle('hidden');
 });
 document.getElementById('startTrainingBtn').addEventListener('click', function() {
-    startTraining(document.getElementById('trainingSelect').value);
+    var varId = document.getElementById('variationSelect').value;
+    if (!varId) { showToast('Сначала выберите дебют и вариацию'); return; }
+    startTraining(varId);
 });
 document.getElementById('stopTrainingBtn').addEventListener('click', function() { stopTraining(); });
 document.getElementById('hintCheck').addEventListener('change', function() {
@@ -1208,7 +1259,17 @@ document.getElementById('hintCheck').addEventListener('change', function() {
     if (training.active) updateTrainingUI();
 });
 document.getElementById('trainingSelect').addEventListener('change', function() {
+    var group = this.value;
+    document.getElementById('variationSelect').classList.add('hidden');
+    if (!group) {
+        document.getElementById('openingDesc').innerText = '';
+        document.getElementById('groupProgress').className = 'group-progress hidden';
+        return;
+    }
+    populateVariationSelect(group);
     updateGroupProgressDisplay();
+});
+document.getElementById('variationSelect').addEventListener('change', function() {
     var id = this.value;
     var item = trainingItems.find(function(o) { return o.id === id; });
     document.getElementById('openingDesc').innerText = item ? item.desc : '';
@@ -1217,6 +1278,7 @@ document.getElementById('resetProgressBtn').addEventListener('click', function()
     if (confirm('Сбросить весь прогресс обучения?')) {
         resetTrainingProgress();
         populateTrainingSelect();
+        document.getElementById('variationSelect').classList.add('hidden');
         updateGroupProgressDisplay();
         showToast('Прогресс сброшен!');
     }
@@ -1224,13 +1286,12 @@ document.getElementById('resetProgressBtn').addEventListener('click', function()
 
 function updateGroupProgressDisplay() {
     var sel = document.getElementById('trainingSelect');
-    var id = sel.value;
-    var item = trainingItems.find(function(o) { return o.id === id; });
+    var group = sel.value;
     var el = document.getElementById('groupProgress');
-    if (item && item.group && groupNames[item.group]) {
-        var stats = getGroupStats(item.group);
+    if (group && groupNames[group]) {
+        var stats = getGroupStats(group);
         var pct = stats.total > 0 ? Math.round(stats.done / stats.total * 100) : 0;
-        el.innerHTML = '<b>' + groupNames[item.group] + '</b>: ' + stats.done + '/' + stats.total + ' изучено (' + pct + '%)';
+        el.innerHTML = '<b>' + groupNames[group] + '</b>: ' + stats.done + '/' + stats.total + ' изучено (' + pct + '%)';
         el.className = 'group-progress';
         if (stats.done === stats.total && stats.total > 0) el.style.color = '#4caf50';
         else el.style.color = '#8bc34a';
