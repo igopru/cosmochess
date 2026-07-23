@@ -4,6 +4,7 @@ import android.content.res.AssetManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import fi.iki.elonen.NanoHTTPD;
 
@@ -111,18 +112,22 @@ public class Server extends NanoHTTPD {
     }
 
     private Response servePuzzles(IHTTPSession session) {
-        StringBuilder out = new StringBuilder("[");
         String json = puzzlesJson;
+        String theme = session.getParameters().getOrDefault("theme", List.of("")).get(0).toLowerCase();
+        int minR = parseInt(session.getParameters().getOrDefault("minRating", List.of("0")).get(0));
+        int maxR = parseInt(session.getParameters().getOrDefault("maxRating", List.of("9999")).get(0));
+        int limit = Math.min(100, parseInt(session.getParameters().getOrDefault("limit", List.of("100")).get(0)));
+
+        List<String> matches = new ArrayList<>();
         int depth = 0;
         boolean inStr = false;
         int arrStart = -1;
-        boolean first = true;
-    
+
         for (int i = 1; i < json.length(); i++) {
             char c = json.charAt(i);
             if (c == '"' && (i == 0 || json.charAt(i - 1) != '\\')) inStr = !inStr;
             if (inStr) continue;
-        
+
             if (c == '[' && depth == 0) {
                 arrStart = i;
                 depth = 1;
@@ -134,20 +139,36 @@ public class Server extends NanoHTTPD {
                     String arr = json.substring(arrStart + 1, i);
                     String[] parts = parseArray(arr);
                     if (parts.length >= 6) {
-                        if (!first) out.append(",");
-                        out.append("{\"puzzleId\":\"").append(jsonEscape(parts[0]))
-                           .append("\",\"fen\":\"").append(jsonEscape(parts[1]))
-                           .append("\",\"moves\":\"").append(jsonEscape(parts[2]))
-                           .append("\",\"rating\":").append(parts[3])
-                           .append(",\"themes\":\"").append(jsonEscape(parts[4]))
-                           .append("\",\"side\":\"").append(jsonEscape(parts[5])).append("\"}");
-                        first = false;
+                        int rating = parseInt(parts[3]);
+                        if (rating >= minR && rating <= maxR) {
+                            if (theme.isEmpty() || parts[4].toLowerCase().contains(theme)) {
+                                matches.add("{\"puzzleId\":\"" + jsonEscape(parts[0])
+                                    + "\",\"fen\":\"" + jsonEscape(parts[1])
+                                    + "\",\"moves\":\"" + jsonEscape(parts[2])
+                                    + "\",\"rating\":" + parts[3]
+                                    + ",\"themes\":\"" + jsonEscape(parts[4])
+                                    + "\",\"side\":\"" + jsonEscape(parts[5]) + "\"}");
+                            }
+                        }
                     }
                     arrStart = -1;
                 }
             }
         }
-        return newFixedLengthResponse(Response.Status.OK, "application/json; charset=utf-8", out.append("]").toString());
+
+        Collections.shuffle(matches);
+        int count = Math.min(limit, matches.size());
+        StringBuilder out = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            if (i > 0) out.append(",");
+            out.append(matches.get(i));
+        }
+        out.append("]");
+        return newFixedLengthResponse(Response.Status.OK, "application/json; charset=utf-8", out.toString());
+    }
+
+    private int parseInt(String s) {
+        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return 0; }
     }
 
     private String[] parseArray(String arr) {

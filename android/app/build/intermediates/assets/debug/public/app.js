@@ -713,10 +713,8 @@ function finishTraining() {
         document.getElementById('status').innerText = 'Задача решена! Возьмите следующую.';
     } else {
         showToast('\u{1F389} Отлично! ' + training.item.name + ' \u2014 выполнено!');
-        document.getElementById('status').innerText = 'Обучение завершено! Выберите другой дебют или задачу.';
+        document.getElementById('status').innerText = 'Обучение завершено! Позиция сохранена для анализа.';
         var currentGroup = training.item.group;
-        game.reset();
-        initBoard('start', userColor === 'b' ? 'black' : 'white');
         populateTrainingSelect();
         document.getElementById('trainingSelect').value = currentGroup;
         populateVariationSelect(currentGroup);
@@ -1116,16 +1114,16 @@ function populateVariationSelect(group) {
     }
     varSel.classList.remove('hidden');
     var progress = getTrainingProgress();
-    items.forEach(function(item) {
+    var openingName = groupNames[group] || items[0].openingName || '';
+    items.forEach(function(item, idx) {
         var opt = document.createElement('option');
         opt.value = item.id;
         var done = progress[item.id] ? '\u2713 ' : '   ';
-        opt.textContent = done + item.name;
+        opt.textContent = done + openingName + ' ' + (idx + 1) + '/' + items.length;
         if (progress[item.id]) opt.style.color = '#4caf50';
         varSel.appendChild(opt);
     });
-    var firstItem = items[0];
-    document.getElementById('openingDesc').innerText = firstItem.openingName + ' \u2014 выберите вариацию';
+    document.getElementById('openingDesc').innerText = openingName + ' \u2014 выберите вариацию';
 }
 
 window.addEventListener('focus', function() {
