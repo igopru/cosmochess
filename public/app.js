@@ -1330,7 +1330,7 @@ function applyFirstMove(fen, uci) {
 
 document.getElementById('puzzleToggle').addEventListener('click', function() {
     document.getElementById('puzzlePanel').classList.toggle('hidden');
-    if (!document.getElementById('puzzleTheme').options.length > 1) {
+    if (document.getElementById('puzzleTheme').options.length <= 1) {
         fetch('/api/puzzle-meta').then(function(r) { return r.json(); }).then(function(data) {
             var sel = document.getElementById('puzzleTheme');
             data.themes.forEach(function(t) {

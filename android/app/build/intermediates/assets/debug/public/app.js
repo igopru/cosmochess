@@ -469,7 +469,7 @@ function setBoardElementWidth() {
 
 function makeBoardConfig(position, orientation) {
     return {
-        draggable: true,
+        draggable: dragMode,
         position: position || 'start',
         pieceTheme: PIECE_IMG,
         orientation: orientation || (userColor === 'b' ? 'black' : 'white'),
@@ -484,7 +484,6 @@ function initBoard(position, orientation) {
     setBoardElementWidth();
     board = Chessboard('board', makeBoardConfig(position, orientation));
     ensureBoardSvg();
-    boardClickAttached = false;
     attachBoardClick();
 }
 
@@ -716,6 +715,8 @@ function finishTraining() {
         showToast('\u{1F389} Отлично! ' + training.item.name + ' \u2014 выполнено!');
         document.getElementById('status').innerText = 'Обучение завершено! Выберите другой дебют или задачу.';
         var currentGroup = training.item.group;
+        game.reset();
+        initBoard('start', userColor === 'b' ? 'black' : 'white');
         populateTrainingSelect();
         document.getElementById('trainingSelect').value = currentGroup;
         populateVariationSelect(currentGroup);
@@ -1329,7 +1330,7 @@ function applyFirstMove(fen, uci) {
 
 document.getElementById('puzzleToggle').addEventListener('click', function() {
     document.getElementById('puzzlePanel').classList.toggle('hidden');
-    if (!document.getElementById('puzzleTheme').options.length > 1) {
+    if (document.getElementById('puzzleTheme').options.length <= 1) {
         fetch('/api/puzzle-meta').then(function(r) { return r.json(); }).then(function(data) {
             var sel = document.getElementById('puzzleTheme');
             data.themes.forEach(function(t) {
